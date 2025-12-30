@@ -17,8 +17,8 @@ import { CARDS_SCHEME } from "../home/dashboard/PaymentLinksDashboard.jsx";
 import SquidLogo from "../../assets/squidl-logo.svg?react";
 import { cnm } from "../../utils/style.js";
 import { createPaymentLink, getPaymentLinks } from "../../lib/supabase.js";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
-import { generateQIEPaymentLink, validateQIEPaymentLink } from "../../utils/qie-payment-links.js";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
+import { generateMantlePaymentLink, validateMantlePaymentLink } from "../../utils/mantle-payment-links.js";
 import { generateMetaAddress } from "../../utils/stealth-crypto.js";
 
 const confettiConfig = {
@@ -131,39 +131,39 @@ function StepOne({
       // Get username from localStorage
       const currentUsername = localStorage.getItem(`qie_username_${account}`) || account?.slice(2, 8);
 
-      // Generate QIE payment link with stealth address
-      const qiePaymentLink = generateQIEPaymentLink(account, alias, {
+      // Generate Mantle payment link with stealth address
+      const mantlePaymentLink = generateMantlePaymentLink(account, alias, {
         message: `Payment to ${currentUsername}`
       });
 
       // Validate the generated payment link
-      const validation = validateQIEPaymentLink(qiePaymentLink);
+      const validation = validateMantlePaymentLink(mantlePaymentLink);
       if (!validation.isValid) {
         console.error('Payment link validation failed:', validation.errors);
         return toast.error("Failed to generate secure payment link");
       }
 
-      // Save payment link to Supabase with QIE stealth address data
+      // Save payment link to Supabase with Mantle stealth address data
       await createPaymentLink(account, currentUsername, alias, {
-        metaAddress: qiePaymentLink.metaAddress,
-        stealthData: qiePaymentLink.stealthData,
-        qrData: qiePaymentLink.qrData,
-        chainId: qiePaymentLink.chainId,
-        network: qiePaymentLink.network
+        metaAddress: mantlePaymentLink.metaAddress,
+        stealthData: mantlePaymentLink.stealthData,
+        qrData: mantlePaymentLink.qrData,
+        chainId: mantlePaymentLink.chainId,
+        network: mantlePaymentLink.network
       });
 
       // Get updated count
       const paymentLinks = await getPaymentLinks(account);
       setInitialAliasCount(paymentLinks.length);
 
-      toast.success("Your QIE payment link has been created!");
+      toast.success("Your Mantle payment link has been created!");
       
       // Trigger a custom event to refresh the dashboard
       window.dispatchEvent(new Event('payment-links-updated'));
       
       setStep("two");
     } catch (error) {
-      console.error('Error creating QIE payment link:', error);
+      console.error('Error creating Mantle payment link:', error);
       if (error.message?.includes('duplicate')) {
         toast.error("This alias already exists");
       } else {

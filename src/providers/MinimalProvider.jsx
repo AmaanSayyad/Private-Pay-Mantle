@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { RootLayout } from "../layouts/RootLayout.jsx";
 
 /**
- * Minimal provider for QIE pages
+ * Minimal provider for Mantle pages
  * No Dynamic, Web3, Auth, or User providers needed
  */
 export default function MinimalProvider({ children }) {

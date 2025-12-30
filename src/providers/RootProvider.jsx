@@ -2,7 +2,7 @@ import { NextUIProvider } from "@nextui-org/react";
 import DynamicProvider from "./DynamicProvider.jsx";
 import AuthProvider from "./AuthProvider.jsx";
 import Web3Provider from "./Web3Provider.jsx";
-import QIEWalletProvider from "./QIEWalletProvider.jsx";
+import MantleWalletProvider from "./MantleWalletProvider.jsx";
 import { SWRConfig } from "swr";
 import UserProvider from "./UserProvider.jsx";
 
@@ -17,7 +17,7 @@ export default function RootProvider({ children }) {
       }}
     >
       <NextUIProvider>
-        <QIEWalletProvider>
+        <MantleWalletProvider>
           <DynamicProvider>
             <Web3Provider>
               <AuthProvider>
@@ -27,7 +27,7 @@ export default function RootProvider({ children }) {
               </AuthProvider>
             </Web3Provider>
           </DynamicProvider>
-        </QIEWalletProvider>
+        </MantleWalletProvider>
       </NextUIProvider>
     </SWRConfig>
   );

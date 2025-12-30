@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { QIE_CONFIG, addQIENetworkToMetaMask, switchToQIENetwork } from '../config/qie-config.js';
-import { qieBlockchainService } from '../lib/qie/qieBlockchainService.js';
+import { MANTLE_CONFIG, addMantleNetworkToMetaMask, switchToMantleNetwork } from '../config/mantle-config.js';
+import { mantleBlockchainService } from '../lib/mantle/mantleBlockchainService.js';
 import toast from 'react-hot-toast';
 
 /**
- * @typedef {Object} QIEWalletContextType
+ * @typedef {Object} MantleWalletContextType
  * @property {string|null} account - Connected wallet address
  * @property {boolean} isConnected - Connection status
  * @property {boolean} isConnecting - Connection in progress
@@ -13,13 +13,13 @@ import toast from 'react-hot-toast';
  * @property {ethers.Signer|null} signer - Ethers signer
  * @property {Function} connect - Connect wallet function
  * @property {Function} disconnect - Disconnect wallet function
- * @property {Function} switchNetwork - Switch to QIE network function
+ * @property {Function} switchNetwork - Switch to Mantle network function
  * @property {number|null} chainId - Current chain ID
- * @property {boolean} isCorrectNetwork - Whether connected to QIE network
+ * @property {boolean} isCorrectNetwork - Whether connected to Mantle network
  */
 
-/** @type {React.Context<QIEWalletContextType>} */
-const QIEWalletContext = createContext({
+/** @type {React.Context<MantleWalletContextType>} */
+const MantleWalletContext = createContext({
   account: null,
   isConnected: false,
   isConnecting: false,
@@ -32,15 +32,15 @@ const QIEWalletContext = createContext({
   isCorrectNetwork: false,
 });
 
-export const useQIEWallet = () => {
-  const context = useContext(QIEWalletContext);
+export const useMantleWallet = () => {
+  const context = useContext(MantleWalletContext);
   if (!context) {
-    throw new Error('useQIEWallet must be used within a QIEWalletProvider');
+    throw new Error('useMantleWallet must be used within a MantleWalletProvider');
   }
   return context;
 };
 
-export default function QIEWalletProvider({ children }) {
+export default function MantleWalletProvider({ children }) {
   const [account, setAccount] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -49,12 +49,10 @@ export default function QIEWalletProvider({ children }) {
   const [chainId, setChainId] = useState(null);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
 
-  // Check if MetaMask is installed
   const isMetaMaskInstalled = () => {
     return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
   };
 
-  // Initialize provider and check existing connection
   const initializeProvider = useCallback(async () => {
     if (!isMetaMaskInstalled()) {
       console.warn('MetaMask is not installed');
@@ -65,7 +63,6 @@ export default function QIEWalletProvider({ children }) {
       const ethProvider = new ethers.BrowserProvider(window.ethereum);
       setProvider(ethProvider);
 
-      // Check if already connected
       const accounts = await ethProvider.listAccounts();
       if (accounts.length > 0) {
         const account = accounts[0];
@@ -75,26 +72,23 @@ export default function QIEWalletProvider({ children }) {
         const signer = await ethProvider.getSigner();
         setSigner(signer);
 
-        // Set signer in QIE blockchain service
         try {
-          await qieBlockchainService.initialize();
-          qieBlockchainService.signer = signer;
-          console.log('QIE blockchain service signer initialized');
+          await mantleBlockchainService.initialize();
+          mantleBlockchainService.signer = signer;
+          console.log('Mantle blockchain service signer initialized');
         } catch (error) {
-          console.error('Failed to initialize QIE blockchain service signer:', error);
+          console.error('Failed to initialize Mantle blockchain service signer:', error);
         }
 
-        // Get current network
         const network = await ethProvider.getNetwork();
         setChainId(Number(network.chainId));
-        setIsCorrectNetwork(Number(network.chainId) === QIE_CONFIG.chainId);
+        setIsCorrectNetwork(Number(network.chainId) === MANTLE_CONFIG.chainId);
       }
     } catch (error) {
       console.error('Failed to initialize provider:', error);
     }
   }, []);
 
-  // Connect wallet
   const connect = useCallback(async () => {
     if (!isMetaMaskInstalled()) {
       toast.error('Please install MetaMask to connect your wallet');
@@ -104,7 +98,6 @@ export default function QIEWalletProvider({ children }) {
 
     setIsConnecting(true);
     try {
-      // Request account access
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts',
       });
@@ -123,36 +116,32 @@ export default function QIEWalletProvider({ children }) {
       const signer = await ethProvider.getSigner();
       setSigner(signer);
 
-      // Set signer in QIE blockchain service
       try {
-        await qieBlockchainService.initialize();
-        qieBlockchainService.signer = signer;
-        console.log('QIE blockchain service signer set successfully');
+        await mantleBlockchainService.initialize();
+        mantleBlockchainService.signer = signer;
+        console.log('Mantle blockchain service signer set successfully');
       } catch (error) {
-        console.error('Failed to set QIE blockchain service signer:', error);
+        console.error('Failed to set Mantle blockchain service signer:', error);
       }
 
-      // Get current network
       const network = await ethProvider.getNetwork();
       const currentChainId = Number(network.chainId);
       setChainId(currentChainId);
       
-      // Check if on correct network
-      if (currentChainId !== QIE_CONFIG.chainId) {
+      if (currentChainId !== MANTLE_CONFIG.chainId) {
         setIsCorrectNetwork(false);
-        toast.error(`Please switch to ${QIE_CONFIG.chainName} network`);
+        toast.error(`Please switch to ${MANTLE_CONFIG.chainName} network`);
         
-        // Attempt to switch network
         try {
-          await switchToQIENetwork();
+          await switchToMantleNetwork();
           setIsCorrectNetwork(true);
-          toast.success(`Connected to ${QIE_CONFIG.chainName}`);
+          toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
         } catch (switchError) {
           console.error('Failed to switch network:', switchError);
         }
       } else {
         setIsCorrectNetwork(true);
-        toast.success(`Connected to ${QIE_CONFIG.chainName}`);
+        toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
       }
 
     } catch (error) {
@@ -164,7 +153,6 @@ export default function QIEWalletProvider({ children }) {
     }
   }, []);
 
-  // Disconnect wallet
   const disconnect = useCallback(async () => {
     setAccount(null);
     setIsConnected(false);
@@ -175,7 +163,6 @@ export default function QIEWalletProvider({ children }) {
     toast.success('Wallet disconnected');
   }, []);
 
-  // Switch to QIE network
   const switchNetwork = useCallback(async () => {
     if (!isMetaMaskInstalled()) {
       toast.error('MetaMask is not installed');
@@ -183,17 +170,16 @@ export default function QIEWalletProvider({ children }) {
     }
 
     try {
-      await switchToQIENetwork();
+      await switchToMantleNetwork();
       
-      // Update network state
       const ethProvider = new ethers.BrowserProvider(window.ethereum);
       const network = await ethProvider.getNetwork();
       const currentChainId = Number(network.chainId);
       setChainId(currentChainId);
-      setIsCorrectNetwork(currentChainId === QIE_CONFIG.chainId);
+      setIsCorrectNetwork(currentChainId === MANTLE_CONFIG.chainId);
       
-      if (currentChainId === QIE_CONFIG.chainId) {
-        toast.success(`Switched to ${QIE_CONFIG.chainName}`);
+      if (currentChainId === MANTLE_CONFIG.chainId) {
+        toast.success(`Switched to ${MANTLE_CONFIG.chainName}`);
       }
     } catch (error) {
       console.error('Failed to switch network:', error);
@@ -201,7 +187,6 @@ export default function QIEWalletProvider({ children }) {
     }
   }, []);
 
-  // Listen for account and network changes
   useEffect(() => {
     if (!isMetaMaskInstalled()) return;
 
@@ -210,7 +195,6 @@ export default function QIEWalletProvider({ children }) {
         disconnect();
       } else if (accounts[0] !== account) {
         setAccount(accounts[0]);
-        // Re-initialize signer with new account
         if (provider) {
           provider.getSigner().then(setSigner).catch(console.error);
         }
@@ -220,10 +204,10 @@ export default function QIEWalletProvider({ children }) {
     const handleChainChanged = (chainId) => {
       const newChainId = parseInt(chainId, 16);
       setChainId(newChainId);
-      setIsCorrectNetwork(newChainId === QIE_CONFIG.chainId);
+      setIsCorrectNetwork(newChainId === MANTLE_CONFIG.chainId);
       
-      if (newChainId !== QIE_CONFIG.chainId) {
-        toast.error(`Please switch to ${QIE_CONFIG.chainName} network`);
+      if (newChainId !== MANTLE_CONFIG.chainId) {
+        toast.error(`Please switch to ${MANTLE_CONFIG.chainName} network`);
       }
     };
 
@@ -238,7 +222,6 @@ export default function QIEWalletProvider({ children }) {
     };
   }, [account, provider, disconnect]);
 
-  // Initialize on mount
   useEffect(() => {
     initializeProvider();
   }, [initializeProvider]);
@@ -257,26 +240,26 @@ export default function QIEWalletProvider({ children }) {
   };
 
   return (
-    <QIEWalletContext.Provider value={contextValue}>
+    <MantleWalletContext.Provider value={contextValue}>
       {children}
-    </QIEWalletContext.Provider>
+    </MantleWalletContext.Provider>
   );
 }
 
-// Backward compatibility hook (replaces useAptos)
+// Backward compatibility hooks
+export const useQIEWallet = useMantleWallet;
 export const useAptos = () => {
-  const qieWallet = useQIEWallet();
+  const mantleWallet = useMantleWallet();
   
   return {
-    account: qieWallet.account,
-    isConnected: qieWallet.isConnected,
-    connect: qieWallet.connect,
-    disconnect: qieWallet.disconnect,
-    // Additional QIE-specific properties
-    provider: qieWallet.provider,
-    signer: qieWallet.signer,
-    chainId: qieWallet.chainId,
-    isCorrectNetwork: qieWallet.isCorrectNetwork,
-    switchNetwork: qieWallet.switchNetwork,
+    account: mantleWallet.account,
+    isConnected: mantleWallet.isConnected,
+    connect: mantleWallet.connect,
+    disconnect: mantleWallet.disconnect,
+    provider: mantleWallet.provider,
+    signer: mantleWallet.signer,
+    chainId: mantleWallet.chainId,
+    isCorrectNetwork: mantleWallet.isCorrectNetwork,
+    switchNetwork: mantleWallet.switchNetwork,
   };
 };

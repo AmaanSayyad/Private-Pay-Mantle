@@ -1,0 +1,16 @@
+{
+  "network": "mantle-sepolia",
+  "chainId": 5003,
+  "contracts": {
+    "StealthAddressRegistry": {
+      "address": "0x6F40A56250fbB57F5a17C815BE66A36804590669",
+      "deploymentBlock": 32784334
+    },
+    "PaymentManager": {
+      "address": "0x95bc083e6911DeBc46b36cDCE8996fAEB28bf9A6",
+      "deploymentBlock": 32784339
+    }
+  },
+  "deployer": "0x71197e7a1CA5A2cb2AD82432B924F69B1E3dB123",
+  "timestamp": 1767113363497
+}

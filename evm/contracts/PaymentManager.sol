@@ -5,7 +5,7 @@ import "./StealthAddressRegistry.sol";
 
 /**
  * @title PaymentManager
- * @dev Manages private payments using stealth addresses on QIE network
+ * @dev Manages private payments using stealth addresses on Mantle Network
  */
 contract PaymentManager {
     StealthAddressRegistry public immutable registry;
@@ -44,7 +44,7 @@ contract PaymentManager {
      * @param recipient The recipient's address who owns the meta address
      * @param metaIndex The index of the recipient's meta address
      * @param k The derivation parameter used for stealth address generation
-     * @param ephemeralPubKey The ephemeral public key used for this payment
+     * @param ephemeralPubKey The ephemeral public key used for this payment (33 bytes)
      * @param stealthAddress The computed stealth address to receive the payment
      * @param viewHint The view hint for efficient scanning
      */
@@ -52,7 +52,7 @@ contract PaymentManager {
         address recipient,
         uint256 metaIndex,
         uint32 k,
-        bytes33 calldata ephemeralPubKey,
+        bytes calldata ephemeralPubKey,
         address stealthAddress,
         uint32 viewHint
     ) external payable {
@@ -63,7 +63,7 @@ contract PaymentManager {
         // Verify the meta address exists
         require(metaIndex < registry.getMetaAddressCount(recipient), "Invalid meta address index");
         
-        // Transfer QIE to stealth address
+        // Transfer MNT to stealth address
         (bool success, ) = stealthAddress.call{value: msg.value}("");
         if (!success) revert TransferFailed();
         
@@ -112,7 +112,7 @@ contract PaymentManager {
     }
     
     /**
-     * @dev Get the QIE balance of a stealth address
+     * @dev Get the MNT balance of a stealth address
      * @param stealthAddress The stealth address to check
      * @return The balance in wei
      */
@@ -135,16 +135,16 @@ contract PaymentManager {
     }
     
     /**
-     * @dev Receive function to accept QIE transfers
+     * @dev Receive function to accept MNT transfers
      */
     receive() external payable {
-        // Allow contract to receive QIE
+        // Allow contract to receive MNT
     }
     
     /**
      * @dev Fallback function
      */
     fallback() external payable {
-        // Allow contract to receive QIE
+        // Allow contract to receive MNT
     }
 }

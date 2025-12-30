@@ -4,13 +4,13 @@ import { format } from "date-fns";
 import { shortenId } from "../../utils/formatting-utils.js";
 import { Spinner, Chip } from "@nextui-org/react";
 import { getUserPayments } from "../../lib/supabase.js";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
 import { 
   getNetworkDisplayInfo, 
   determineTransactionNetwork, 
   formatTransactionAmount,
   getNetworkBadgeProps 
-} from "../../utils/qie-utils.js";
+} from "../../utils/mantle-utils.js";
 
 export default function Transactions() {
   const { account } = useAptos();

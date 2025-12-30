@@ -11,8 +11,8 @@ import { Icons } from "../../shared/Icons.jsx";
 import { useNavigate } from "react-router-dom";
 import { getUserBalance, registerUser } from "../../../lib/supabase.js";
 import BalanceChart from "./BalanceChart.jsx";
-import { useAptos } from "../../../providers/QIEWalletProvider.jsx";
-import { formatQIEAmount } from "../../../utils/qie-utils.js";
+import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
+import { formatMNTAmount } from "../../../utils/mantle-utils.js";
 
 export default function Dashboard() {
   const [openQr, setOpenQr] = useState(false);
@@ -276,9 +276,9 @@ function MergedBalanceCard({ balance, isLoading }) {
         ) : (
           <div className="flex items-baseline gap-2 mb-2">
             <p className="text-4xl font-bold text-primary">
-              {formatQIEAmount(balance.toString(), false, 6)}
+              {formatMNTAmount(balance.toString(), false, 6)}
             </p>
-            <p className="text-lg font-semibold text-gray-600">QIE</p>
+            <p className="text-lg font-semibold text-gray-600">MNT</p>
           </div>
         )}
       </div>

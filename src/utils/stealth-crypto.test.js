@@ -1,5 +1,5 @@
 /**
- * Tests for QIE Stealth Address Cryptographic Utilities
+ * Tests for Mantle Stealth Address Cryptographic Utilities
  */
 
 import { describe, it, expect } from 'vitest';
@@ -9,14 +9,14 @@ import {
   computeECDHSecret,
   generateStealthAddress,
   deriveStealthPrivateKey,
-  publicKeyToQIEAddress,
+  publicKeyToMantleAddress,
   isValidStealthAddress,
   checkPaymentOwnership,
   generateViewHint,
   createStealthWallet
 } from './stealth-crypto.js';
 
-describe('QIE Stealth Crypto Utilities', () => {
+describe('Mantle Stealth Crypto Utilities', () => {
   describe('generateKeyPair', () => {
     it('should generate valid secp256k1 key pairs', () => {
       const keyPair = generateKeyPair();
@@ -66,10 +66,10 @@ describe('QIE Stealth Crypto Utilities', () => {
     });
   });
 
-  describe('publicKeyToQIEAddress', () => {
-    it('should convert public key to valid QIE address', () => {
+  describe('publicKeyToMantleAddress', () => {
+    it('should convert public key to valid Mantle address', () => {
       const keyPair = generateKeyPair();
-      const address = publicKeyToQIEAddress(keyPair.publicKey);
+      const address = publicKeyToMantleAddress(keyPair.publicKey);
       
       expect(address).toMatch(/^0x[a-fA-F0-9]{40}$/);
       expect(isValidStealthAddress(address)).toBe(true);

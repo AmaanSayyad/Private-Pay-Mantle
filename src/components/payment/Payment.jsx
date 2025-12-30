@@ -3,11 +3,11 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useLoaderData, useParams } from "react-router-dom";
 import { getPaymentLinkByAlias, getUserByUsername, recordPayment } from "../../lib/supabase.js";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
-import { sendQIETransfer } from "../../lib/qie/qieTransactionService.js";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
+import { sendMNTTransfer } from "../../lib/mantle/mantleTransactionService.js";
 import SuccessDialog from "../dialogs/SuccessDialog.jsx";
 import { Icons } from "../shared/Icons.jsx";
-import { getQIETransactionUrl } from "../../utils/qie-utils.js";
+import { getMantleTransactionUrl } from "../../utils/mantle-utils.js";
 
 const TREASURY_WALLET = import.meta.env.VITE_TREASURY_WALLET_ADDRESS;
 
@@ -88,7 +88,7 @@ export default function Payment() {
     }
 
     if (!isConnected || !account) {
-      toast.error("Please connect your QIE wallet first");
+      toast.error("Please connect your Mantle wallet first");
       return;
     }
 
@@ -106,8 +106,8 @@ export default function Payment() {
 
     setIsSending(true);
     try {
-      // Send QIE to treasury wallet
-      const result = await sendQIETransfer({
+      // Send MNT to treasury wallet
+      const result = await sendMNTTransfer({
         accountAddress: account,
         recipientAddress: TREASURY_WALLET,
         amount: parseFloat(amount),
@@ -137,7 +137,7 @@ export default function Payment() {
         (t) => (
           <div 
             onClick={() => {
-              window.open(getQIETransactionUrl(result.hash), '_blank');
+              window.open(getMantleTransactionUrl(result.hash), '_blank');
               toast.dismiss(t.id);
             }}
             className="cursor-pointer hover:underline"
@@ -152,11 +152,11 @@ export default function Payment() {
       const successDataObj = {
         type: "PRIVATE_TRANSFER",
         amount: parseFloat(amount),
-        chain: { name: "QIE", id: "qie" },
+        chain: { name: "Mantle", id: "mantle" },
         token: { 
           nativeToken: { 
-            symbol: "QIE", 
-            logo: "/assets/qie.png" 
+            symbol: "MNT", 
+            logo: "/assets/mantle.png" 
           } 
         },
         destinationAddress: `${alias}.privatepay.me`,
@@ -242,7 +242,7 @@ export default function Payment() {
                 <div className="w-full flex flex-col gap-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
                     <p className="text-sm text-blue-800 text-center">
-                      Connect your QIE wallet (MetaMask) to send a payment
+                      Connect your Mantle wallet (MetaMask) to send a payment
                     </p>
                   </div>
                   <Button
@@ -250,7 +250,7 @@ export default function Payment() {
                     className="bg-primary text-white font-bold py-5 px-6 h-16 w-full rounded-[32px]"
                     size="lg"
                   >
-                    Connect QIE Wallet
+                    Connect Mantle Wallet
                   </Button>
                 </div>
               ) : (
@@ -272,7 +272,7 @@ export default function Payment() {
 
                   {/* Amount Input */}
                   <Input
-                    label="Amount (QIE)"
+                    label="Amount (MNT)"
                     type="number"
                     placeholder="0.01"
                     value={amount}
@@ -294,7 +294,7 @@ export default function Payment() {
                     className="bg-primary text-white font-bold py-5 px-6 h-16 w-full rounded-[32px]"
                     size="lg"
                   >
-                    {isSending ? "Sending..." : `Send ${amount || "0"} QIE`}
+                    {isSending ? "Sending..." : `Send ${amount || "0"} MNT`}
                   </Button>
 
                   {/* Info */}

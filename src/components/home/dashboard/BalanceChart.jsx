@@ -11,8 +11,8 @@ import { Spinner } from "@nextui-org/react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { safeGetJSON, safeSetJSON } from "../../../utils/localStorageUtils.js";
-import { useAptos } from "../../../providers/QIEWalletProvider.jsx";
-import { formatQIEAmount } from "../../../utils/qie-utils.js";
+import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
+import { formatMNTAmount } from "../../../utils/mantle-utils.js";
 
 const BALANCE_HISTORY_KEY = 'qie_balance_history';
 
@@ -258,7 +258,7 @@ export default function BalanceChart({ balance }) {
             tickMargin={10}
           />
           <YAxis 
-            tickFormatter={(value) => formatQIEAmount(value.toString(), false, 4)}
+            tickFormatter={(value) => formatMNTAmount(value.toString(), false, 4)}
             style={{ fontSize: '11px', fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
@@ -296,8 +296,8 @@ const CustomTooltip = ({ active, payload }) => {
           </p>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-2xl font-bold text-gray-900">{formatQIEAmount(balance.toString(), false, 6)}</p>
-          <p className="text-sm font-semibold text-indigo-600">QIE</p>
+          <p className="text-2xl font-bold text-gray-900">{formatMNTAmount(balance.toString(), false, 6)}</p>
+          <p className="text-sm font-semibold text-indigo-600">MNT</p>
         </div>
       </div>
     );

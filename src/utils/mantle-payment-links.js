@@ -1,25 +1,25 @@
 /**
- * QIE Payment Link Generation Utilities
+ * Mantle Payment Link Generation Utilities
  * 
- * This module provides utilities for generating payment links with QIE stealth addresses.
+ * This module provides utilities for generating payment links with Mantle stealth addresses.
  * It integrates with the stealth cryptography module to create secure, private payment links.
  */
 
 import { generateMetaAddress, generateStealthAddress } from './stealth-crypto.js';
-import { QIE_CONFIG } from '../config/qie-config.js';
+import { MANTLE_CONFIG } from '../config/mantle-config.js';
 import { ethers } from 'ethers';
 
 /**
- * Generate a QIE payment link with stealth address
- * @param {string} recipientAddress - QIE wallet address of recipient
+ * Generate a Mantle payment link with stealth address
+ * @param {string} recipientAddress - Mantle wallet address of recipient
  * @param {string} alias - Payment link alias
  * @param {Object} options - Additional options
- * @param {string} options.amount - Optional amount in QIE
+ * @param {string} options.amount - Optional amount in MNT
  * @param {string} options.message - Optional message
  * @param {Object} options.metaAddress - Optional existing meta address
  * @returns {Object} Payment link data
  */
-export function generateQIEPaymentLink(recipientAddress, alias, options = {}) {
+export function generateMantlePaymentLink(recipientAddress, alias, options = {}) {
   const { amount, message, metaAddress } = options;
   
   // Generate or use existing meta address
@@ -32,7 +32,7 @@ export function generateQIEPaymentLink(recipientAddress, alias, options = {}) {
   );
   
   // Create payment link URL
-  const baseUrl = QIE_CONFIG.paymentLinks?.baseUrl || 'https://privatepay.me';
+  const baseUrl = MANTLE_CONFIG.paymentLinks?.baseUrl || 'https://privatepay.me';
   const paymentUrl = `${baseUrl}/${alias}`;
   
   // Generate QR code data
@@ -41,7 +41,7 @@ export function generateQIEPaymentLink(recipientAddress, alias, options = {}) {
     stealthAddress: stealthData.stealthAddress,
     amount,
     message,
-    chainId: QIE_CONFIG.chainId
+    chainId: MANTLE_CONFIG.chainId
   });
   
   return {
@@ -54,25 +54,20 @@ export function generateQIEPaymentLink(recipientAddress, alias, options = {}) {
     amount,
     message,
     createdAt: new Date().toISOString(),
-    chainId: QIE_CONFIG.chainId,
-    network: QIE_CONFIG.chainName
+    chainId: MANTLE_CONFIG.chainId,
+    network: MANTLE_CONFIG.chainName
   };
 }
 
 /**
- * Generate QR code data for QIE payment
+ * Generate QR code data for Mantle payment
  * @param {Object} params - QR code parameters
- * @param {string} params.url - Payment URL
- * @param {string} params.stealthAddress - Stealth address
- * @param {string} params.amount - Optional amount
- * @param {string} params.message - Optional message
- * @param {number} params.chainId - Chain ID
  * @returns {Object} QR code data
  */
 export function generateQRCodeData(params) {
   const { url, stealthAddress, amount, message, chainId } = params;
   
-  // Create EIP-681 compatible payment URI for QIE
+  // Create EIP-681 compatible payment URI for Mantle
   let paymentUri = `ethereum:${stealthAddress}`;
   
   const queryParams = [];
@@ -83,12 +78,10 @@ export function generateQRCodeData(params) {
   
   if (amount) {
     try {
-      // Convert QIE amount to wei
       const weiAmount = ethers.parseEther(amount.toString());
       queryParams.push(`value=${weiAmount.toString()}`);
     } catch (error) {
       console.warn('Invalid amount for QR code:', amount);
-      // Skip invalid amounts
     }
   }
   
@@ -112,18 +105,16 @@ export function generateQRCodeData(params) {
 }
 
 /**
- * Parse QIE payment link to extract stealth address and payment info
+ * Parse Mantle payment link to extract stealth address and payment info
  * @param {string} paymentUrl - Payment URL or URI
  * @returns {Object} Parsed payment data
  */
-export function parseQIEPaymentLink(paymentUrl) {
+export function parseMantlePaymentLink(paymentUrl) {
   try {
-    // Handle EIP-681 URIs
     if (paymentUrl.startsWith('ethereum:')) {
       return parseEIP681URI(paymentUrl);
     }
     
-    // Handle regular payment URLs
     const url = new URL(paymentUrl);
     const alias = url.pathname.split('/').pop();
     
@@ -138,11 +129,6 @@ export function parseQIEPaymentLink(paymentUrl) {
   }
 }
 
-/**
- * Parse EIP-681 payment URI
- * @param {string} uri - EIP-681 URI
- * @returns {Object} Parsed payment data
- */
 function parseEIP681URI(uri) {
   const match = uri.match(/^ethereum:([^?]+)(\?(.+))?$/);
   if (!match) {
@@ -179,13 +165,11 @@ export function generateStealthForPaymentLink(paymentLinkData, senderAddress = n
     throw new Error('Payment link must have meta address data');
   }
   
-  // Generate new stealth address for this payment
   const stealthData = generateStealthAddress(
     metaAddress.spendPublicKey,
     metaAddress.viewingPublicKey
   );
   
-  // Update QR code data with new stealth address
   const qrData = generateQRCodeData({
     url: paymentLinkData.paymentUrl,
     stealthAddress: stealthData.stealthAddress,
@@ -204,11 +188,11 @@ export function generateStealthForPaymentLink(paymentLinkData, senderAddress = n
 }
 
 /**
- * Validate QIE payment link data
+ * Validate Mantle payment link data
  * @param {Object} paymentLinkData - Payment link data to validate
  * @returns {Object} Validation result
  */
-export function validateQIEPaymentLink(paymentLinkData) {
+export function validateMantlePaymentLink(paymentLinkData) {
   const errors = [];
   
   if (!paymentLinkData.alias) {
@@ -239,8 +223,8 @@ export function validateQIEPaymentLink(paymentLinkData) {
     }
   }
   
-  if (paymentLinkData.chainId && paymentLinkData.chainId !== QIE_CONFIG.chainId) {
-    errors.push(`Invalid chain ID. Expected ${QIE_CONFIG.chainId}`);
+  if (paymentLinkData.chainId && paymentLinkData.chainId !== MANTLE_CONFIG.chainId) {
+    errors.push(`Invalid chain ID. Expected ${MANTLE_CONFIG.chainId}`);
   }
   
   return {
@@ -259,13 +243,13 @@ export function formatPaymentLinkDisplay(paymentLinkData) {
   
   return {
     title: `${alias}.privatepay.me`,
-    subtitle: message || 'QIE Payment Link',
-    amount: amount ? `${amount} QIE` : 'No amount specified',
+    subtitle: message || 'Mantle Payment Link',
+    amount: amount ? `${amount} MNT` : 'No amount specified',
     stealthAddress: stealthData?.stealthAddress,
     shortAddress: stealthData?.stealthAddress 
       ? `${stealthData.stealthAddress.slice(0, 6)}...${stealthData.stealthAddress.slice(-4)}`
       : null,
-    network: QIE_CONFIG.chainName,
+    network: MANTLE_CONFIG.chainName,
     chainId
   };
 }
@@ -289,18 +273,17 @@ export function createShareableText(paymentLinkData) {
   }
   
   text += `Network: ${display.network}\n`;
-  text += `\nPay securely with stealth addresses on QIE blockchain.`;
+  text += `\nPay securely with stealth addresses on Mantle blockchain.`;
   
   return text;
 }
 
-// Export all functions as default
 export default {
-  generateQIEPaymentLink,
+  generateMantlePaymentLink,
   generateQRCodeData,
-  parseQIEPaymentLink,
+  parseMantlePaymentLink,
   generateStealthForPaymentLink,
-  validateQIEPaymentLink,
+  validateMantlePaymentLink,
   formatPaymentLinkDisplay,
   createShareableText
 };

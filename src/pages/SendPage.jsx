@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input } from "@nextui-org/react";
 import { Icons } from "../components/shared/Icons.jsx";
-import { useAptos } from "../providers/QIEWalletProvider.jsx";
-import { sendQIETransfer } from "../lib/qie/qieTransactionService.js";
+import { useAptos } from "../providers/MantleWalletProvider.jsx";
+import { sendMNTTransfer } from "../lib/mantle/mantleTransactionService.js";
 import { recordPayment, getUserByUsername, getPaymentLinkByAlias } from "../lib/supabase.js";
 import toast from "react-hot-toast";
-import { getQIETransactionUrl } from "../utils/qie-utils.js";
+import { getMantleTransactionUrl } from "../utils/mantle-utils.js";
 
 const TREASURY_WALLET = import.meta.env.VITE_TREASURY_WALLET_ADDRESS;
 
@@ -38,7 +38,6 @@ export default function SendPage() {
 
     setIsValidatingRecipient(true);
     try {
-      // First check if it's a username
       try {
         const user = await getUserByUsername(username.trim());
         if (user) {
@@ -47,10 +46,8 @@ export default function SendPage() {
         }
       } catch (userError) {
         console.warn('Username check failed:', userError);
-        // Continue to alias check
       }
 
-      // If not found as username, check if it's a payment link alias
       try {
         const paymentLink = await getPaymentLinkByAlias(username.trim());
         if (paymentLink) {
@@ -61,11 +58,9 @@ export default function SendPage() {
         console.warn('Alias check failed:', aliasError);
       }
 
-      // Not found as either username or alias
       setRecipientValid(false);
     } catch (error) {
       console.error("Error validating recipient:", error);
-      // If there's a network error, assume valid for now
       if (error.message?.includes('unreachable') || error.message?.includes('406')) {
         console.warn('Database unreachable, allowing recipient');
         setRecipientValid(true);
@@ -81,7 +76,6 @@ export default function SendPage() {
     const value = e.target.value;
     setRecipientUsername(value);
     
-    // Debounce validation
     clearTimeout(window.recipientValidationTimeout);
     window.recipientValidationTimeout = setTimeout(() => {
       validateRecipient(value);
@@ -105,7 +99,7 @@ export default function SendPage() {
     }
 
     if (!isConnected || !account) {
-      toast.error("Please connect your QIE wallet first");
+      toast.error("Please connect your Mantle wallet first");
       return;
     }
 
@@ -114,7 +108,6 @@ export default function SendPage() {
       return;
     }
 
-    // Validate treasury wallet address format
     if (!TREASURY_WALLET.startsWith('0x') || TREASURY_WALLET.length !== 42) {
       console.error('Invalid treasury wallet format:', TREASURY_WALLET);
       toast.error("Treasury wallet address is not in valid EVM format. Please contact support.");
@@ -123,22 +116,18 @@ export default function SendPage() {
 
     setIsSending(true);
     try {
-      // Determine if it's a username or alias and get the actual recipient username
       let actualRecipientUsername = recipientUsername.trim();
       
-      // First check if it's a direct username
       try {
         const recipientUser = await getUserByUsername(recipientUsername.trim());
         if (recipientUser) {
           actualRecipientUsername = recipientUser.username;
         } else {
-          // Check if it's a payment link alias
           try {
             const paymentLink = await getPaymentLinkByAlias(recipientUsername.trim());
             if (paymentLink) {
               actualRecipientUsername = paymentLink.username;
             } else {
-              // If neither found, use the input as username (for cases where DB is unreachable)
               console.warn('Recipient not found in database, using input as username');
               actualRecipientUsername = recipientUsername.trim();
             }
@@ -152,8 +141,7 @@ export default function SendPage() {
         actualRecipientUsername = recipientUsername.trim();
       }
 
-      // Send QIE to treasury wallet
-      const result = await sendQIETransfer({
+      const result = await sendMNTTransfer({
         accountAddress: account,
         recipientAddress: TREASURY_WALLET,
         amount: parseFloat(amount),
@@ -164,9 +152,6 @@ export default function SendPage() {
         throw new Error("Transaction failed");
       }
 
-      // Record payment in Supabase with the actual username.
-      // If the recipient was a payment link alias, tag it so we can
-      // show per-link totals on the dashboard.
       const paymentAlias =
         (await getPaymentLinkByAlias(recipientUsername.trim()))?.alias || null;
 
@@ -178,7 +163,6 @@ export default function SendPage() {
         paymentAlias
       );
 
-      // Trigger balance update event
       window.dispatchEvent(new Event('balance-updated'));
 
       const shortHash = result.hash.slice(0, 6) + "..." + result.hash.slice(-4);
@@ -187,7 +171,7 @@ export default function SendPage() {
         (t) => (
           <div 
             onClick={() => {
-              window.open(getQIETransactionUrl(result.hash), '_blank');
+              window.open(getMantleTransactionUrl(result.hash), '_blank');
               toast.dismiss(t.id);
             }}
             className="cursor-pointer hover:underline"
@@ -198,19 +182,16 @@ export default function SendPage() {
         { duration: 8000 }
       );
 
-      // Reset form
       setRecipientUsername("");
       setAmount("");
       setRecipientValid(null);
       
-      // Navigate back to home after successful payment
       setTimeout(() => {
         navigate("/");
       }, 2000);
     } catch (error) {
       console.error("Payment error:", error);
       
-      // Show more specific error messages
       if (error.message.includes('Invalid recipient address')) {
         toast.error("Treasury wallet address is invalid. Please contact support.");
       } else if (error.message.includes('not found')) {
@@ -242,12 +223,11 @@ export default function SendPage() {
         </div>
 
         <div className="bg-white rounded-[32px] py-6 px-6 flex flex-col gap-4 w-full border border-gray-200 shadow-lg">
-          {/* Wallet Connection */}
           {!isConnected ? (
             <div className="flex flex-col gap-4">
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
                 <p className="text-sm text-blue-800 text-center">
-                  Connect your QIE wallet (MetaMask) to send a payment
+                  Connect your Mantle wallet (MetaMask) to send a payment
                 </p>
               </div>
               <Button
@@ -255,12 +235,11 @@ export default function SendPage() {
                 className="bg-primary text-white font-bold py-5 px-6 h-16 w-full rounded-[32px]"
                 size="lg"
               >
-                Connect QIE Wallet
+                Connect Mantle Wallet
               </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {/* Connected Wallet Info */}
               <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -275,7 +254,6 @@ export default function SendPage() {
                 </div>
               </div>
 
-              {/* Recipient Input */}
               <Input
                 label="Recipient Username or Alias"
                 placeholder="username or alias"
@@ -306,9 +284,8 @@ export default function SendPage() {
                 }
               />
 
-              {/* Amount Input */}
               <Input
-                label="Amount (QIE)"
+                label="Amount (MNT)"
                 type="number"
                 placeholder="0.01"
                 value={amount}
@@ -322,7 +299,6 @@ export default function SendPage() {
                 step="0.00000001"
               />
 
-              {/* Send Button */}
               <Button
                 onClick={handleSendPayment}
                 isLoading={isSending}
@@ -336,10 +312,9 @@ export default function SendPage() {
                 className="bg-primary text-white font-bold py-5 px-6 h-16 w-full rounded-[32px]"
                 size="lg"
               >
-                {isSending ? "Sending..." : `Send ${amount || "0"} QIE`}
+                {isSending ? "Sending..." : `Send ${amount || "0"} MNT`}
               </Button>
 
-              {/* Info */}
               <p className="text-xs text-gray-500 text-center mt-2">
                 Funds will be sent to the treasury wallet. The recipient can withdraw anytime.
               </p>

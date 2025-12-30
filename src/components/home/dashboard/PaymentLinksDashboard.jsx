@@ -9,7 +9,7 @@ import SquidLogo from "../../../assets/squidl-logo.svg?react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getPaymentLinks, getPaymentTotalsByAlias } from "../../../lib/supabase.js";
-import { useAptos } from "../../../providers/QIEWalletProvider.jsx";
+import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
 
 export const AVAILABLE_CARDS_BG = [
   "/assets/card-1.png",
@@ -152,7 +152,7 @@ export default function PaymentLinksDashboard({ user }) {
                     <p className="font-medium">{cardName}</p>
                     {totalForAlias > 0 && (
                       <p className="text-sm font-semibold">
-                        {totalForAlias.toFixed(4)} QIE
+                        {totalForAlias.toFixed(4)} MNT
                       </p>
                     )}
                   </div>

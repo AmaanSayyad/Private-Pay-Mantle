@@ -1,14 +1,10 @@
 import type { HardhatUserConfig } from "hardhat/config";
-import '@oasisprotocol/sapphire-hardhat';
 import "@nomicfoundation/hardhat-toolbox";
-// import "@nomicfoundation/hardhat-toolbox-viem";
 import "@nomicfoundation/hardhat-ethers";
-import "@nomiclabs/hardhat-solhint";
 import "hardhat-tracer";
 import dotenv from 'dotenv';
-dotenv.config();
-
-console.log('PRIVATE_KEY:', process.env.PRIVATE_KEY);
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -16,56 +12,67 @@ const config: HardhatUserConfig = {
     settings: {
       viaIR: true,
       optimizer: {
-          enabled: true,
-          runs: 2000,
+        enabled: true,
+        runs: 2000,
       },
     },
   },
+  defaultNetwork: "mantle-sepolia",
   networks: {
-    'sepolia': {
-      url: "https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+    // Mantle Sepolia Testnet
+    'mantle-sepolia': {
+      url: "https://rpc.sepolia.mantle.xyz",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 11155111,
-      gasPrice: 20000000000, // 20 gwei
+      chainId: 5003,
+      gasPrice: 20000000, // 0.02 gwei
     },
-    'qie-testnet': {
-      url: "https://rpc1testnet.qie.digital/",
+    // Mantle Mainnet
+    'mantle-mainnet': {
+      url: "https://rpc.mantle.xyz",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 35441, // QIE testnet chain ID (tahmin)
-      gasPrice: 20000000000, // 20 gwei
-      gas: 8000000,
+      chainId: 5000,
     },
-    'sapphire-testnet': {
-      // This is Testnet! If you want Mainnet, add a new network config item.
-      url: "https://testnet.sapphire.oasis.io",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 0x5aff,
-    },
-    'sapphire-localnet': {
+    // Local development
+    'localhost': {
       url: 'http://localhost:8545',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 0x5afd,
     },
   },
   etherscan: {
+    apiKey: {
+      'mantle-sepolia': process.env.MANTLESCAN_API_KEY || '',
+      'mantle-mainnet': process.env.MANTLESCAN_API_KEY || '',
+    },
     customChains: [
       {
-        network: "sapphire-testnet",
-        chainId: 0x5aff,
+        network: 'mantle-sepolia',
+        chainId: 5003,
         urls: {
-          apiURL: "https://explorer.oasis.io/testnet/sapphire/api",
-          browserURL: "https://explorer.oasis.io/testnet/sapphire/",
+          apiURL: 'https://api-sepolia.mantlescan.xyz/api',
+          browserURL: 'https://sepolia.mantlescan.xyz',
+        },
+      },
+      {
+        network: 'mantle-mainnet',
+        chainId: 5000,
+        urls: {
+          apiURL: 'https://api.mantlescan.xyz/api',
+          browserURL: 'https://mantlescan.xyz',
         },
       },
     ],
   },
   sourcify: {
     enabled: true,
-    // Optional: specify a different Sourcify server
     apiUrl: "https://sourcify.dev/server",
-    // Optional: specify a different Sourcify repository
     browserUrl: "https://repo.sourcify.dev",
-  }
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts",
+  },
 };
 
 export default config;

@@ -3,12 +3,12 @@ pragma solidity ^0.8.19;
 
 /**
  * @title StealthAddressRegistry
- * @dev Registry contract for managing stealth address meta addresses and payment announcements on QIE network
+ * @dev Registry contract for managing stealth address meta addresses and payment announcements on Mantle Network
  */
 contract StealthAddressRegistry {
     struct MetaAddress {
-        bytes33 spendPubKey;
-        bytes33 viewingPubKey;
+        bytes spendPubKey;    // 33 bytes compressed secp256k1 public key
+        bytes viewingPubKey;  // 33 bytes compressed secp256k1 public key
         uint256 createdAt;
     }
     
@@ -19,15 +19,15 @@ contract StealthAddressRegistry {
     event MetaAddressRegistered(
         address indexed user,
         uint256 indexed index,
-        bytes33 spendPubKey,
-        bytes33 viewingPubKey,
+        bytes spendPubKey,
+        bytes viewingPubKey,
         uint256 timestamp
     );
     
     event PaymentAnnouncement(
         address indexed recipient,
         uint256 indexed metaAddressIndex,
-        bytes33 ephemeralPubKey,
+        bytes ephemeralPubKey,
         address stealthAddress,
         uint32 viewHint,
         uint32 k,
@@ -40,9 +40,9 @@ contract StealthAddressRegistry {
      * @param spendPub The spend public key (33 bytes compressed secp256k1)
      * @param viewingPub The viewing public key (33 bytes compressed secp256k1)
      */
-    function registerMetaAddress(bytes33 calldata spendPub, bytes33 calldata viewingPub) external {
-        require(spendPub != bytes33(0), "Invalid spend public key");
-        require(viewingPub != bytes33(0), "Invalid viewing public key");
+    function registerMetaAddress(bytes calldata spendPub, bytes calldata viewingPub) external {
+        require(spendPub.length == 33, "Invalid spend public key length");
+        require(viewingPub.length == 33, "Invalid viewing public key length");
         
         uint256 index = metaAddresses[msg.sender].length;
         
@@ -74,7 +74,7 @@ contract StealthAddressRegistry {
     function announcePayment(
         address recipient,
         uint256 metaAddressIndex,
-        bytes33 calldata ephemeralPubKey,
+        bytes calldata ephemeralPubKey,
         address stealthAddress,
         uint32 viewHint,
         uint32 k,
@@ -82,7 +82,7 @@ contract StealthAddressRegistry {
     ) external {
         require(recipient != address(0), "Invalid recipient address");
         require(metaAddressIndex < metaAddresses[recipient].length, "Invalid meta address index");
-        require(ephemeralPubKey != bytes33(0), "Invalid ephemeral public key");
+        require(ephemeralPubKey.length == 33, "Invalid ephemeral public key length");
         require(stealthAddress != address(0), "Invalid stealth address");
         require(amount > 0, "Amount must be greater than 0");
         

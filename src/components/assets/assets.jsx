@@ -5,67 +5,66 @@ import { Spinner } from "@nextui-org/react";
 import AssetItem from "../alias/AssetItem.jsx";
 import { formatCurrency } from "@coingecko/cryptoformat";
 import { useUser } from "../../providers/UserProvider.jsx";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
-import { qieBalanceService } from "../../lib/qie/qieBalanceService.js";
-import { formatQIEAmount } from "../../utils/qie-utils.js";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
+import { getMNTBalance } from "../../lib/mantle/mantleTransactionService.js";
 
 export default function Assets() {
   const { assets } = useUser();
   const { account, isConnected } = useAptos();
-  const [qieBalance, setQieBalance] = useState(null);
-  const [isLoadingQIE, setIsLoadingQIE] = useState(true);
+  const [mntBalance, setMntBalance] = useState(null);
+  const [isLoadingMNT, setIsLoadingMNT] = useState(true);
 
-  // Load QIE balance
+  // Load MNT balance
   useEffect(() => {
-    const loadQIEBalance = async () => {
+    const loadMNTBalance = async () => {
       if (account && isConnected) {
         try {
-          const balance = await qieBalanceService.getMainWalletBalance(account);
-          setQieBalance(balance);
+          const balance = await getMNTBalance(account);
+          setMntBalance(balance);
         } catch (error) {
-          console.error('Failed to load QIE balance:', error);
-          setQieBalance({ balanceQIE: 0, formattedBalance: '0' });
+          console.error('Failed to load MNT balance:', error);
+          setMntBalance({ mnt: '0', formatted: '0' });
         } finally {
-          setIsLoadingQIE(false);
+          setIsLoadingMNT(false);
         }
       } else {
-        setIsLoadingQIE(false);
+        setIsLoadingMNT(false);
       }
     };
 
-    loadQIEBalance();
+    loadMNTBalance();
 
     // Listen for balance updates
     const handleBalanceUpdate = () => {
-      loadQIEBalance();
+      loadMNTBalance();
     };
 
-    window.addEventListener('qie-balance-updated', handleBalanceUpdate);
+    window.addEventListener('mantle-balance-updated', handleBalanceUpdate);
     window.addEventListener('balance-updated', handleBalanceUpdate);
 
     return () => {
-      window.removeEventListener('qie-balance-updated', handleBalanceUpdate);
+      window.removeEventListener('mantle-balance-updated', handleBalanceUpdate);
       window.removeEventListener('balance-updated', handleBalanceUpdate);
     };
   }, [account, isConnected]);
 
-  // Merge QIE balance with other assets
+  // Merge MNT balance with other assets
   const mergedAssets = [];
 
-  // Add QIE native token first
-  if (qieBalance && isConnected) {
+  // Add MNT native token first
+  if (mntBalance && isConnected) {
     mergedAssets.push({
-      balance: qieBalance.balanceQIE,
-      formattedBalance: qieBalance.formattedBalance,
+      balance: parseFloat(mntBalance.mnt),
+      formattedBalance: mntBalance.formatted,
       nativeToken: {
-        symbol: 'QIE',
-        logo: '/assets/qie-logo.png', // Add QIE logo to public/assets/
-        name: 'QIE Token'
+        symbol: 'MNT',
+        logo: 'https://www.mantle.xyz/favicon.ico',
+        name: 'Mantle Token'
       },
-      chainName: 'QIE Testnet',
-      chainLogo: '/assets/qie-logo.png',
-      priceUSD: 0, // Will be updated when price API is available
-      isQIE: true
+      chainName: 'Mantle Sepolia',
+      chainLogo: 'https://www.mantle.xyz/favicon.ico',
+      priceUSD: 0,
+      isMantle: true
     });
   }
 
@@ -80,7 +79,7 @@ export default function Assets() {
 
   return (
     <div className={"relative flex w-full h-full"}>
-      {(isLoadingQIE && !assets) ? (
+      {(isLoadingMNT && !assets) ? (
         <Spinner
           size="md"
           color="primary"
@@ -95,8 +94,8 @@ export default function Assets() {
                 item?.nativeToken ? item.nativeToken.logo : item.token?.logo
               }
               balance={
-                item.isQIE 
-                  ? `${item.formattedBalance} QIE`
+                item.isMantle 
+                  ? `${item.formattedBalance} MNT`
                   : `${formatCurrency(
                       item.balance,
                       item?.nativeToken ? item.nativeToken.symbol : item.token.symbol,
@@ -110,8 +109,8 @@ export default function Assets() {
               chainName={item.chainName}
               chainLogo={item.chainLogo}
               priceUSD={
-                item.isQIE 
-                  ? "$0.00" // Placeholder until price API is available
+                item.isMantle 
+                  ? "$0.00"
                   : formatCurrency(item.priceUSD, "USD", "en", false, {
                       significantFigures: 5,
                     })

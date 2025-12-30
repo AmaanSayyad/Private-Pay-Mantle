@@ -5,8 +5,8 @@ import Nounsies from "./Nounsies.jsx";
 import { useSetAtom } from "jotai";
 import { isCreateLinkDialogAtom } from "../../store/dialog-store.js";
 import { useState } from "react";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
-import { getQIEAddressUrl } from "../../utils/qie-utils.js";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
+import { getMantleAddressUrl } from "../../utils/mantle-utils.js";
 
 export default function Header() {
   const setCreateLinkModal = useSetAtom(isCreateLinkDialogAtom);
@@ -65,7 +65,7 @@ const UserProfileButton = () => {
         onClick={handleConnect}
         className="h-12 rounded-full bg-primary-50 text-primary font-medium px-6"
       >
-        Connect QIE Wallet
+        Connect Mantle Wallet
       </Button>
     );
   }
@@ -95,7 +95,7 @@ const UserProfileButton = () => {
                   <p className="text-sm font-medium text-gray-800 truncate">
                     {account?.slice(0, 6)}...{account?.slice(-4)}
                   </p>
-                  <p className="text-xs text-gray-500">QIE Wallet</p>
+                  <p className="text-xs text-gray-500">Mantle Wallet</p>
                 </div>
               </div>
 
@@ -113,7 +113,7 @@ const UserProfileButton = () => {
               <button
                 onClick={() => {
                   window.open(
-                    getQIEAddressUrl(account),
+                    getMantleAddressUrl(account),
                     "_blank"
                   );
                   setShowMenu(false);

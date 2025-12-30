@@ -10,7 +10,7 @@ import { useAtom } from "jotai";
 import SquidLogo from "../../assets/squidl-logo.svg?react";
 import { isCreateLinkDialogAtom } from "../../store/dialog-store.js";
 import { useState, useEffect } from "react";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
 import toast from "react-hot-toast";
 import { Icons } from "../shared/Icons.jsx";
 import { getPaymentLinks } from "../../lib/supabase.js";

@@ -1,12 +1,12 @@
 /**
- * QIE Stealth Address Cryptographic Utilities
+ * Mantle Stealth Address Cryptographic Utilities
  * 
  * This module provides cryptographic functions for stealth address generation
- * and management on the QIE blockchain, which is EVM-compatible.
+ * and management on the Mantle blockchain, which is EVM-compatible.
  * 
  * Key features:
  * - ECDH key exchange using secp256k1
- * - Stealth address generation for QIE (EVM format)
+ * - Stealth address generation for Mantle (EVM format)
  * - Private key derivation for fund withdrawal
  * - Meta address management
  */
@@ -160,11 +160,11 @@ export function deriveStealthPrivateKeyFromPayment(paymentData, spendPrivateKey,
 }
 
 /**
- * Convert compressed public key to QIE address (EVM format)
+ * Convert compressed public key to Mantle address (EVM format)
  * @param {string} publicKeyHex - Compressed public key as hex string
- * @returns {string} QIE address (0x...)
+ * @returns {string} Mantle address (0x...)
  */
-export function publicKeyToQIEAddress(publicKeyHex) {
+export function publicKeyToMantleAddress(publicKeyHex) {
   // Use ethers to convert public key to address
   // First, we need to get the uncompressed public key
   const publicKeyBytes = ethers.getBytes(publicKeyHex);
@@ -187,7 +187,7 @@ export function publicKeyToQIEAddress(publicKeyHex) {
 }
 
 /**
- * Validate QIE stealth address format
+ * Validate Mantle stealth address format
  * @param {string} address - Address to validate
  * @returns {boolean} True if valid
  */
@@ -271,7 +271,7 @@ export default {
   generateStealthAddress,
   deriveStealthPrivateKey,
   deriveStealthPrivateKeyFromPayment,
-  publicKeyToQIEAddress,
+  publicKeyToMantleAddress,
   isValidStealthAddress,
   checkPaymentOwnership,
   generateViewHint,

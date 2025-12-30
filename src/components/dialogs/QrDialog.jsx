@@ -3,7 +3,7 @@ import { Icons } from "../shared/Icons.jsx";
 import toast from "react-hot-toast";
 import { QRCode } from "react-qrcode-logo";
 import { useRef, useState, useEffect } from "react";
-import { useAptos } from "../../providers/QIEWalletProvider.jsx";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
 
 export default function QrDialog({ open, setOpen, qrUrl }) {
   const { account } = useAptos();

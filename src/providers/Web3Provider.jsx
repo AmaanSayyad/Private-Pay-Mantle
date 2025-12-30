@@ -2,7 +2,7 @@ import { getSigner, getWeb3Provider } from "@dynamic-labs/ethers-v6";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { ethers } from "ethers";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { QIE_CONFIG } from "../config/qie-config.js";
+import { MANTLE_CONFIG } from "../config/mantle-config.js";
 import { customEvmNetworks } from "../config";
 import ContractABI from "../abi/StealthSigner.json";
 import toast from "react-hot-toast";
@@ -46,7 +46,8 @@ export default function Web3Provider({ children }) {
 
   const isInitiating = useRef(false);
 
-  const qie = customEvmNetworks.find((chain) => chain.group === "qie");
+  // Find Mantle network from custom networks
+  const mantle = customEvmNetworks.find((chain) => chain.group === "mantle");
 
   async function init() {
     if (isInitiating.current || !primaryWallet) return;
@@ -55,9 +56,9 @@ export default function Web3Provider({ children }) {
       const _provider = await getWeb3Provider(primaryWallet);
       const _signer = await getSigner(primaryWallet);
       
-      // Use QIE contracts directly without Sapphire wrapping
+      // Use Mantle contracts
       const contract = new ethers.Contract(
-        QIE_CONFIG.contracts.StealthAddressRegistry.address,
+        MANTLE_CONFIG.contracts.StealthAddressRegistry.address,
         ContractABI.abi,
         _signer
       );
@@ -82,22 +83,23 @@ export default function Web3Provider({ children }) {
       setIsNetworkChecking(true);
     }
 
-    console.log("checking...");
+    console.log("Checking Mantle network...");
 
     try {
       const network = await provider?.getNetwork();
+      const targetChainId = mantle?.chainId || MANTLE_CONFIG.chainId;
 
-      if (network?.chainId !== qie.chainId) {
+      if (network?.chainId !== targetChainId) {
         if (primaryWallet?.connector?.supportsNetworkSwitching()) {
           try {
-            await primaryWallet.switchNetwork(qie.chainId);
+            await primaryWallet.switchNetwork(targetChainId);
 
             await init();
             return;
           } catch (error) {
             console.error("Error switching network:", error);
             toast.error(
-              `Failed to switch network. Please switch to ${qie.name} manually.`
+              `Failed to switch network. Please switch to Mantle Network manually.`
             );
             await sleep(2000);
 
@@ -106,14 +108,14 @@ export default function Web3Provider({ children }) {
           }
         } else {
           toast.error(
-            `Network switching not supported. Please switch to ${qie.name} manually.`
+            `Network switching not supported. Please switch to Mantle Network manually.`
           );
           await sleep(2000);
           handleLogOut();
           return;
         }
       } else {
-        toast.info(`Already connected to ${qie.name} network.`);
+        toast.info(`Already connected to Mantle Network.`);
         await init();
         return;
       }
