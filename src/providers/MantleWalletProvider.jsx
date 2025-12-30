@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { ethers } from 'ethers';
 import { MANTLE_CONFIG, addMantleNetworkToMetaMask, switchToMantleNetwork } from '../config/mantle-config.js';
 import { mantleBlockchainService } from '../lib/mantle/mantleBlockchainService.js';
+import { registerUser } from '../lib/supabase.js';
 import toast from 'react-hot-toast';
 
 /**
@@ -72,6 +73,18 @@ export default function MantleWalletProvider({ children }) {
         const signer = await ethProvider.getSigner();
         setSigner(signer);
 
+        // Register user in Supabase (creates default payment link)
+        try {
+          const user = await registerUser(account.address);
+          if (user) {
+            console.log('User registered/retrieved on init:', user);
+            const username = user.username || account.address.slice(2, 8).toLowerCase();
+            localStorage.setItem(`mantle_username_${account.address}`, username);
+          }
+        } catch (regError) {
+          console.warn('Could not register user on init:', regError);
+        }
+
         try {
           await mantleBlockchainService.initialize();
           mantleBlockchainService.signer = signer;
@@ -115,6 +128,19 @@ export default function MantleWalletProvider({ children }) {
 
       const signer = await ethProvider.getSigner();
       setSigner(signer);
+
+      // Register user in Supabase (creates default payment link)
+      try {
+        const user = await registerUser(account);
+        if (user) {
+          console.log('User registered/retrieved:', user);
+          // Save username to localStorage
+          const username = user.username || account.slice(2, 8).toLowerCase();
+          localStorage.setItem(`mantle_username_${account}`, username);
+        }
+      } catch (regError) {
+        console.warn('Could not register user:', regError);
+      }
 
       try {
         await mantleBlockchainService.initialize();

@@ -155,13 +155,17 @@ export default function SendPage() {
       const paymentAlias =
         (await getPaymentLinkByAlias(recipientUsername.trim()))?.alias || null;
 
-      await recordPayment(
-        account,
-        actualRecipientUsername,
-        parseFloat(amount),
-        result.hash,
-        paymentAlias
-      );
+      // Get recipient's wallet address from payment link
+      const recipientPaymentLink = await getPaymentLinkByAlias(recipientUsername.trim());
+      const recipientWalletAddress = recipientPaymentLink?.wallet_address || TREASURY_WALLET;
+
+      await recordPayment({
+        senderAddress: account,
+        recipientAddress: recipientWalletAddress,
+        amount: parseFloat(amount),
+        transactionHash: result.hash,
+        status: 'confirmed'
+      });
 
       window.dispatchEvent(new Event('balance-updated'));
 

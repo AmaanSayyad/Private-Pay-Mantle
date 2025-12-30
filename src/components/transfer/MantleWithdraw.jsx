@@ -30,18 +30,19 @@ export function MantleWithdraw() {
         const userUsername = savedUsername || account.slice(2, 8);
         setUsername(userUsername);
         setDestinationAddress(account);
-        await loadBalance(userUsername);
+        await loadBalance();
       }
     }
     
     loadUserData();
   }, [account]);
 
-  const loadBalance = async (userUsername) => {
+  const loadBalance = async () => {
     try {
       setIsLoadingBalance(true);
-      const balanceData = await getUserBalance(userUsername || username);
-      setAvailableBalance(balanceData?.available_balance || 0);
+      // getUserBalance expects wallet address, not username
+      const balanceAmount = await getUserBalance(account);
+      setAvailableBalance(balanceAmount || 0);
     } catch (error) {
       console.error('Error loading balance:', error);
       toast.error('Failed to load balance');
@@ -61,7 +62,9 @@ export function MantleWithdraw() {
   };
 
   const handleMaxClick = () => {
-    setWithdrawAmount(availableBalance.toString());
+    // Limit to 8 decimal places to avoid floating point issues
+    const maxAmount = parseFloat(availableBalance).toFixed(8);
+    setWithdrawAmount(maxAmount);
   };
 
   const handleWithdraw = async () => {
@@ -95,7 +98,10 @@ export function MantleWithdraw() {
       }
 
       const treasuryBalance = await provider.getBalance(TREASURY_WALLET_ADDRESS);
-      const withdrawAmountWei = ethers.parseEther(withdrawAmount);
+      
+      // Fix floating point precision - limit to 18 decimals max
+      const cleanAmount = parseFloat(withdrawAmount).toFixed(18).replace(/\.?0+$/, '');
+      const withdrawAmountWei = ethers.parseEther(cleanAmount);
       
       if (treasuryBalance < withdrawAmountWei) {
         throw new Error('Insufficient treasury balance');
@@ -104,7 +110,7 @@ export function MantleWithdraw() {
       const transaction = {
         to: destinationAddress,
         value: withdrawAmountWei,
-        gasLimit: 21000,
+        gasLimit: 100000000, // Mantle requires higher gas limit
       };
 
       const feeData = await provider.getFeeData();
@@ -118,7 +124,13 @@ export function MantleWithdraw() {
       const txResponse = await treasuryWallet.sendTransaction(transaction);
       const receipt = await provider.waitForTransaction(txResponse.hash, 1);
 
-      await withdrawFunds(username, parseFloat(withdrawAmount), destinationAddress, txResponse.hash);
+      await withdrawFunds({
+        fromAddress: TREASURY_WALLET_ADDRESS,
+        toAddress: destinationAddress,
+        userWalletAddress: account, // User's wallet for balance tracking
+        amount: parseFloat(withdrawAmount),
+        transactionHash: txResponse.hash
+      });
       await loadBalance();
 
       window.dispatchEvent(new Event('balance-updated'));

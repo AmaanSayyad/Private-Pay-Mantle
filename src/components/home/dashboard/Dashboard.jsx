@@ -9,7 +9,7 @@ import PaymentLinksDashboard from "./PaymentLinksDashboard.jsx";
 import toast from "react-hot-toast";
 import { Icons } from "../../shared/Icons.jsx";
 import { useNavigate } from "react-router-dom";
-import { getUserBalance, registerUser } from "../../../lib/supabase.js";
+import { getUserBalance, registerUser, updateUsername, getPaymentLinks } from "../../../lib/supabase.js";
 import BalanceChart from "./BalanceChart.jsx";
 import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
 import { formatMNTAmount } from "../../../utils/mantle-utils.js";
@@ -23,18 +23,21 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadBalance() {
       if (account) {
-        const username = localStorage.getItem(`qie_username_${account}`) || account.slice(2, 8);
-        
         // Register user if not exists
         try {
-          await registerUser(account, username);
+          await registerUser(account);
         } catch (error) {
           console.error('Error registering user:', error);
         }
 
-        // Get balance
-        const balanceData = await getUserBalance(username);
-        setBalance(balanceData?.available_balance || 0);
+        // Get all payment links for this wallet
+        const links = await getPaymentLinks(account);
+        
+        // Get all transactions for this wallet and sum them
+        const balanceAmount = await getUserBalance(account);
+        
+        console.log('Dashboard balance loaded:', balanceAmount);
+        setBalance(balanceAmount || 0);
         setIsLoadingBalance(false);
       }
     }
@@ -82,12 +85,12 @@ function ReceiveCard({ setOpenQr, user, isLoading }) {
   // Load username from localStorage
   useEffect(() => {
     if (account) {
-      const savedUsername = localStorage.getItem(`qie_username_${account}`);
+      const savedUsername = localStorage.getItem(`mantle_username_${account}`);
       if (savedUsername) {
         setUsername(savedUsername);
       } else {
         // Generate default username from address
-        const defaultUsername = account.slice(2, 8);
+        const defaultUsername = account.slice(2, 8).toLowerCase();
         setUsername(defaultUsername);
       }
     }
@@ -96,23 +99,30 @@ function ReceiveCard({ setOpenQr, user, isLoading }) {
   const handleSaveUsername = async () => {
     if (username && account) {
       try {
-        // Save to localStorage
-        localStorage.setItem(`qie_username_${account}`, username);
-        
-        // Update in Supabase
-        await registerUser(account, username);
+        // Update username in Supabase (also creates payment link)
+        await updateUsername(account, username);
         
         setIsEditingUsername(false);
         toast.success("Username updated successfully!", {
           duration: 2000,
           position: "bottom-center",
         });
+        
+        // Dispatch event to update payment links
+        window.dispatchEvent(new CustomEvent('payment-links-updated'));
       } catch (error) {
         console.error('Error updating username:', error);
-        toast.error("Failed to update username", {
-          duration: 2000,
-          position: "bottom-center",
-        });
+        if (error.message?.includes('already taken')) {
+          toast.error("This username is already taken", {
+            duration: 2000,
+            position: "bottom-center",
+          });
+        } else {
+          toast.error("Failed to update username", {
+            duration: 2000,
+            position: "bottom-center",
+          });
+        }
       }
     }
   };

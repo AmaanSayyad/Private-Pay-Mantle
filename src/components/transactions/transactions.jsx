@@ -21,19 +21,19 @@ export default function Transactions() {
   // Get username from localStorage when account changes
   useEffect(() => {
     if (account) {
-      const savedUsername = localStorage.getItem(`qie_username_${account}`);
+      const savedUsername = localStorage.getItem(`mantle_username_${account}`);
       const userUsername = savedUsername || account.slice(2, 8);
       setUsername(userUsername);
     }
   }, [account]);
 
   const loadTransactions = async () => {
-    if (!username) return; // Don't load if no username
+    if (!account) return;
     
     try {
-      console.log('Loading transactions for username:', username);
-      // Get transactions from database with network information
-      const allTransactions = await getUserPayments(username);
+      console.log('Loading transactions for wallet:', account);
+      // Get transactions from database using wallet address
+      const allTransactions = await getUserPayments(account);
       console.log('Loaded transactions:', allTransactions);
       setTransactions(allTransactions);
     } catch (error) {
@@ -44,7 +44,7 @@ export default function Transactions() {
   };
 
   useEffect(() => {
-    if (username) {
+    if (account) {
       loadTransactions();
 
       // Refresh every 10 seconds
@@ -65,7 +65,7 @@ export default function Transactions() {
         window.removeEventListener('balance-updated', handleBalanceUpdate);
       };
     }
-  }, [username]); // Depend on username instead of empty array
+  }, [account]); // Depend on account
 
   const groupedTransactions = useMemo(() => {
     // Show all transactions (no filtering needed since we only use QIE now)
@@ -124,9 +124,18 @@ export default function Transactions() {
             <div key={date} className="mb-4">
               <p className="text-[#A1A1A3] font-medium text-sm mt-1">{date}</p>
               {groupedTransactions[date].map((tx, idx) => {
-                const isWithdrawal = tx.status === 'withdrawn';
+                const isWithdrawal = tx.is_withdrawal || tx.transaction_type === 'withdrawal';
                 const isSent = tx.is_sent === true;
-                const isReceived = !isWithdrawal && !isSent;
+                const isReceived = tx.is_received === true;
+                
+                console.log('TX display:', { 
+                  isWithdrawal, 
+                  isSent, 
+                  isReceived, 
+                  transaction_type: tx.transaction_type,
+                  sender: tx.sender_address,
+                  recipient: tx.recipient_address
+                });
                 
                 // Determine network using utility function
                 const network = determineTransactionNetwork(tx);
@@ -137,16 +146,16 @@ export default function Transactions() {
                 
                 if (isWithdrawal) {
                   title = "Withdrawal";
-                  subtitle = "to your wallet";
-                  value = formatTransactionAmount(tx.amount, network, false);
+                  subtitle = "To your wallet";
+                  value = formatTransactionAmount(tx.amount, network, false); // negative/minus
                 } else if (isSent) {
-                  title = "Sent Payment";
-                  subtitle = `to ${tx.recipient_username}.privatepay.me`;
-                  value = formatTransactionAmount(tx.amount, network, false);
+                  title = "Private Transfer";
+                  subtitle = "Sent privately";
+                  value = formatTransactionAmount(tx.amount, network, false); // negative/minus
                 } else {
-                  title = `${username}.privatepay.me`;
-                  subtitle = `from ${shortenId(tx.sender_address)}`;
-                  value = formatTransactionAmount(tx.amount, network, true);
+                  title = "Private Transfer";
+                  subtitle = "Received privately";
+                  value = formatTransactionAmount(tx.amount, network, true); // positive/plus
                 }
                 
                 return (

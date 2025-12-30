@@ -16,10 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { CARDS_SCHEME } from "../home/dashboard/PaymentLinksDashboard.jsx";
 import SquidLogo from "../../assets/squidl-logo.svg?react";
 import { cnm } from "../../utils/style.js";
-import { createPaymentLink, getPaymentLinks } from "../../lib/supabase.js";
+import { createPaymentLink, getPaymentLinks, isAliasAvailable } from "../../lib/supabase.js";
 import { useAptos } from "../../providers/MantleWalletProvider.jsx";
-import { generateMantlePaymentLink, validateMantlePaymentLink } from "../../utils/mantle-payment-links.js";
-import { generateMetaAddress } from "../../utils/stealth-crypto.js";
 
 const confettiConfig = {
   angle: 90, // Angle at which the confetti will explode
@@ -45,7 +43,7 @@ export default function CreateLinkDialog() {
   useEffect(() => {
     async function loadData() {
       if (account) {
-        const savedUsername = localStorage.getItem(`qie_username_${account}`);
+        const savedUsername = localStorage.getItem(`mantle_username_${account}`);
         setUsername(savedUsername || account.slice(2, 8));
         
         const paymentLinks = await getPaymentLinks(account);
@@ -127,29 +125,25 @@ function StepOne({
       return toast.error("Alias can't be more than 15 characters");
     }
 
+    if (!account) {
+      return toast.error("Please connect your wallet first");
+    }
+
     try {
-      // Get username from localStorage
-      const currentUsername = localStorage.getItem(`qie_username_${account}`) || account?.slice(2, 8);
-
-      // Generate Mantle payment link with stealth address
-      const mantlePaymentLink = generateMantlePaymentLink(account, alias, {
-        message: `Payment to ${currentUsername}`
-      });
-
-      // Validate the generated payment link
-      const validation = validateMantlePaymentLink(mantlePaymentLink);
-      if (!validation.isValid) {
-        console.error('Payment link validation failed:', validation.errors);
-        return toast.error("Failed to generate secure payment link");
+      // Check if alias is available
+      const available = await isAliasAvailable(alias);
+      if (!available) {
+        return toast.error("This alias is already taken");
       }
 
-      // Save payment link to Supabase with Mantle stealth address data
-      await createPaymentLink(account, currentUsername, alias, {
-        metaAddress: mantlePaymentLink.metaAddress,
-        stealthData: mantlePaymentLink.stealthData,
-        qrData: mantlePaymentLink.qrData,
-        chainId: mantlePaymentLink.chainId,
-        network: mantlePaymentLink.network
+      // Get username from localStorage
+      const currentUsername = localStorage.getItem(`mantle_username_${account}`) || account?.slice(2, 8);
+
+      // Save payment link to Supabase
+      await createPaymentLink({
+        walletAddress: account,
+        alias: alias,
+        description: `Payment link for ${currentUsername} - ${alias}`
       });
 
       // Get updated count
@@ -164,7 +158,7 @@ function StepOne({
       setStep("two");
     } catch (error) {
       console.error('Error creating Mantle payment link:', error);
-      if (error.message?.includes('duplicate')) {
+      if (error.message?.includes('duplicate') || error.code === '23505') {
         toast.error("This alias already exists");
       } else {
         toast.error("Failed to create payment link");

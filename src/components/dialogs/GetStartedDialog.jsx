@@ -11,15 +11,10 @@ import SquidlLogo from "../../assets/squidl.svg?react";
 import { useAtom } from "jotai";
 import { isGetStartedDialogAtom } from "../../store/dialog-store";
 import toast from "react-hot-toast";
-import { squidlAPI } from "../../api/squidl";
-import { useUserWallets } from "@dynamic-labs/sdk-react-core";
-import Nounsies from "../shared/Nounsies";
-import useSWR from "swr";
 import { useNavigate } from "react-router-dom";
-import { useWeb3 } from "../../providers/Web3Provider";
 import { useDebounce } from "@uidotdev/usehooks";
-import { ethers } from "ethers";
-import { sapphireTestnet } from "../../config";
+import { createPaymentLink, isAliasAvailable, registerUser, updateUsername } from "../../lib/supabase.js";
+import { useAptos } from "../../providers/MantleWalletProvider.jsx";
 
 const confettiConfig = {
   angle: 90,
@@ -36,7 +31,6 @@ const confettiConfig = {
 
 export default function GetStartedDialog() {
   const [isOpen, setOpen] = useAtom(isGetStartedDialogAtom);
-
   const [step, setStep] = useState("one");
 
   return (
@@ -63,6 +57,7 @@ function StepOne({ setStep }) {
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const debouncedUsername = useDebounce(username, 500);
+  const { account, isConnected } = useAptos();
 
   const handleCheckUsername = async () => {
     try {
@@ -72,126 +67,73 @@ function StepOne({ setStep }) {
       }
 
       setIsCheckingUsername(true);
-
-      const { data } = await squidlAPI.get(`/stealth-address/aliases/check`, {
-        params: {
-          alias: debouncedUsername,
-        },
-      });
-
-      setIsUsernameAvailable(data)
+      const available = await isAliasAvailable(debouncedUsername.toLowerCase());
+      setIsUsernameAvailable(available);
     } catch (error) {
-      console.error('Error checking username', error)
+      console.error('Error checking username', error);
+      setIsUsernameAvailable(false);
     } finally {
       setIsCheckingUsername(false);
     }
   };
 
   useEffect(() => {
-    console.log('debouncedUsername', debouncedUsername)
-
     if (!debouncedUsername) {
       setIsUsernameAvailable(false);
       setIsCheckingUsername(false);
       return;
     } else {
-      handleCheckUsername()
+      handleCheckUsername();
     }
-
-  }, [debouncedUsername])
+  }, [debouncedUsername]);
 
   const [loading, setLoading] = useState(false);
 
-  const { contract } = useWeb3();
-
   async function handleUpdate() {
-    console.log('handleUpdate')
     if (loading) return;
 
     if (!username) {
       return toast.error("Please provide a username");
     }
 
+    if (!isConnected || !account) {
+      return toast.error("Please connect your wallet first");
+    }
+
     setLoading(true);
 
     try {
-      toast.loading(
-        "Preparing meta address, please sign the transaction...",
-        {
-          id: 'loading-meta-address',
-        }
-      );
-
-      let authSigner;
-      try {
-        const authSignerData = localStorage.getItem("auth_signer");
-        if (!authSignerData) {
-          throw new Error("Auth signer not found in localStorage");
-        }
-        // Validate JSON before parsing
-        if (typeof authSignerData !== 'string' || !authSignerData.trim().startsWith('{')) {
-          console.error("Invalid auth_signer data in localStorage");
-          throw new Error("Invalid signer data. Please reconnect your wallet.");
-        }
-        authSigner = JSON.parse(authSignerData);
-      } catch (error) {
-        console.error("Failed to parse auth_signer:", error);
-        throw error;
-      }
-      if (!authSigner) {
-        throw new Error("Auth signer not found in localStorage");
-      }
-
-      // Sapphire Provider and Paymaster Wallet
-      const sapphireProvider = new ethers.JsonRpcProvider(sapphireTestnet.rpcUrls[0]);
-      const paymasterPK = import.meta.env.VITE_PAYMASTER_PK;
-      const paymasterWallet = new ethers.Wallet(paymasterPK, sapphireProvider);
-
-      const contract = new ethers.Contract(
-        sapphireTestnet.stealthSignerContract.address,
-        sapphireTestnet.stealthSignerContract.abi.abi,
-        paymasterWallet
-      )
-      toast.loading(
-        "Cooking your meta address and ENS username, please wait...",
-        {
-          id: 'loading-meta-address',
-        }
-      );
-
-      // Populate transaction
-      const tx = await contract.register(authSigner);
-      console.log("Populated Transaction:", tx);
-
-      await tx.wait();
-
-      console.log("Transaction Confirmed:", tx);
-
-      // Get the user meta address
-      const metaAddress = await contract.getMetaAddress.staticCall(authSigner, 1);
-      const metaAddressInfo = {
-        metaAddress: metaAddress[0],
-        spendPublicKey: metaAddress[1],
-        viewingPublicKey: metaAddress[2],
-      }
-
-      console.log("Meta Address Info:", metaAddressInfo);
-
-      await squidlAPI.post("/user/update-user", {
-        username: username.toLowerCase(),
-        metaAddressInfo: metaAddressInfo
+      toast.loading("Creating your payment link...", {
+        id: 'loading-payment-link',
       });
 
-      toast.success("Meta address and ENS username successfully created");
+      // Register user in Supabase (if not already registered)
+      await registerUser(account);
+
+      // Update username in Supabase (this also creates payment link)
+      await updateUsername(account, username.toLowerCase());
+
+      toast.success("Payment link created successfully!", {
+        id: 'loading-payment-link',
+      });
+
+      // Dispatch event to update payment links
+      window.dispatchEvent(new CustomEvent('payment-links-updated'));
 
       setStep("two");
     } catch (e) {
-      console.error('Error creating username', e)
-      toast.error("Error creating your username", {
-        id: 'loading-meta-address',
-      })
+      console.error('Error creating payment link', e);
+      if (e.message?.includes('already taken')) {
+        toast.error("This username is already taken", {
+          id: 'loading-payment-link',
+        });
+      } else {
+        toast.error("Error creating your payment link", {
+          id: 'loading-payment-link',
+        });
+      }
     } finally {
-      toast.dismiss('loading-meta-address');
+      toast.dismiss('loading-payment-link');
       setLoading(false);
     }
   }
@@ -200,8 +142,8 @@ function StepOne({ setStep }) {
     <>
       <p className="text-2xl font-semibold">Let's get started!</p>
       <p className="text-lg mt-4">
-        Pick a cool username for your SQUIDL. This will be your payment link and
-        ENS, so anyone can easily send you money
+        Pick a cool username for your PrivatePay. This will be your payment link,
+        so anyone can easily send you money on Mantle Network.
       </p>
       <div className="mt-8 rounded-xl size-24 aspect-square bg-neutral-100 overflow-hidden mx-auto">
         <img
@@ -222,27 +164,27 @@ function StepOne({ setStep }) {
           }}
           value={username}
           onChange={(e) => {
-            const val = e.target.value;
+            const val = e.target.value.replace(/[^a-zA-Z0-9-_]/g, '');
             setUsername(val);
           }}
           placeholder="your-username"
           variant="bordered"
           isInvalid={!isUsernameAvailable && username}
         />
-        <p className="absolute right-4 text-neutral-400">.squidl.me</p>
+        <p className="absolute right-4 text-neutral-400">.privatepay.me</p>
       </div>
-      {(isUsernameAvailable === false && username) &&
+      {(!isUsernameAvailable && username) && (
         <div className="text-red-500 mt-1">
           Username is already taken
         </div>
-      }
+      )}
       <Button
         onClick={handleUpdate}
-        loading={loading || isCheckingUsername}
-        isDisabled={loading || !isUsernameAvailable || isCheckingUsername}
+        isLoading={loading || isCheckingUsername}
+        isDisabled={loading || !isUsernameAvailable || isCheckingUsername || !isConnected}
         className="h-16 rounded-full text-white flex items-center justify-center w-full mt-4 bg-primary-600"
       >
-        Continue
+        {!isConnected ? "Connect Wallet First" : "Continue"}
       </Button>
     </>
   );
@@ -250,13 +192,17 @@ function StepOne({ setStep }) {
 
 function StepTwo({ setOpen }) {
   const [confettiTrigger, setConfettiTrigger] = useState(false);
-  const userWallets = useUserWallets();
-  const { data: user, isLoading } = useSWR("/auth/me", async (url) => {
-    const { data } = await squidlAPI.get(url);
-    return data;
-  });
-
+  const { account } = useAptos();
+  const [username, setUsername] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get username from localStorage
+    if (account) {
+      const savedUsername = localStorage.getItem(`mantle_username_${account}`);
+      setUsername(savedUsername || account.slice(0, 8));
+    }
+  }, [account]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -270,36 +216,43 @@ function StepTwo({ setOpen }) {
     <>
       <p className="text-2xl font-semibold">You're all set!</p>
       <p className="text-lg mt-4">
-        Your Squidl username is live and ready for action. Share it with anyone
-        to start receiving payments like a pro
+        Your PrivatePay username is live and ready for action. Share it with anyone
+        to start receiving payments on Mantle Network.
       </p>
       {/* Card */}
       <div className="w-full rounded-2xl bg-primary-600 h-[221px] mt-5 flex flex-col overflow-hidden relative">
         <div className="w-full flex items-center justify-end px-6 py-5 text-white">
-          {isLoading ? (
-            <Skeleton className="w-24 h-8 rounded-md" />
-          ) : (
-            <p className="text-xl">{user?.username}.squidl.me</p>
-          )}
+          <p className="text-xl">{username}.privatepay.me</p>
         </div>
         <div className="bg-primary-50 flex-1 flex flex-col justify-end">
           <div className="w-full flex items-end justify-between py-5 px-6">
-            <p className="text-primary-600 text-2xl font-medium">SQUIDL</p>
+            <p className="text-primary-600 text-2xl font-medium">PRIVATEPAY</p>
             <SquidlLogo className="w-14" />
           </div>
         </div>
         {/* Image */}
         <div className="absolute size-24 top-6 left-6 rounded-xl bg-neutral-200 overflow-hidden">
-          <Nounsies address={userWallets[0]?.address} />
+          <img
+            src="/assets/nouns-placeholder.png"
+            alt="avatar"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
       <Button
         onClick={async () => {
-          await navigator.share({
-            title: "Link",
-            text: `${user?.username}.squidl.me`,
-          });
+          try {
+            await navigator.share({
+              title: "PrivatePay Link",
+              text: `Send me payments: ${username}.privatepay.me`,
+              url: `https://${username}.privatepay.me`
+            });
+          } catch (e) {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(`https://${username}.privatepay.me`);
+            toast.success("Link copied to clipboard!");
+          }
         }}
         className="h-16 rounded-full text-white flex items-center justify-center w-full mt-4 bg-primary-600"
       >
