@@ -1,6 +1,8 @@
-# QIE Smart Contracts
+# Mantle Smart Contracts
 
-This directory contains the Solidity smart contracts for PrivatePay on QIE network, implementing stealth address functionality for private payments.
+This directory contains the Solidity smart contracts for PrivatePay on Mantle Network, implementing stealth address functionality for private payments.
+
+Built for [Mantle Global Hackathon 2025 - ZK & Privacy Track](https://www.hackquest.io/hackathons/Mantle-Global-Hackathon-2025).
 
 ## Overview
 
@@ -26,10 +28,16 @@ npx hardhat compile
 
 ## Deployment
 
-To deploy to QIE testnet:
+To deploy to Mantle Sepolia testnet:
 
 ```bash
-npx hardhat run scripts/deploy-qie-contracts.ts --network qie-testnet
+npx hardhat run scripts/deploy-mantle-contracts.ts --network mantle-sepolia
+```
+
+To deploy to Mantle mainnet:
+
+```bash
+npx hardhat run scripts/deploy-mantle-contracts.ts --network mantle-mainnet
 ```
 
 ## Testing
@@ -42,8 +50,6 @@ npx hardhat test
 
 ## Configuration
 
-The contracts are configured for QIE testnet in `hardhat.config.ts`. Update the network settings as needed for your deployment.
+The contracts are configured for Mantle Network (Sepolia testnet and mainnet) in `hardhat.config.ts`. Update the network settings as needed for your deployment.
 
-For detailed deployment instructions, see [QIE_DEPLOYMENT_GUIDE.md](./QIE_DEPLOYMENT_GUIDE.md).
-
-This project uses Hardhat for smart contract development and deployment on QIE network.
+This project uses Hardhat for smart contract development and deployment on Mantle Network.

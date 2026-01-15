@@ -1,7 +1,7 @@
 const https = require('https');
 
 const address = '0xf6becad1b5e17ff7184d02e88fb6f358e698c8de';
-const rpcUrl = 'https://rpc1testnet.qie.digital/';
+const rpcUrl = 'https://rpc.sepolia.mantle.xyz';
 
 // JSON-RPC request to get balance
 const requestData = JSON.stringify({
@@ -11,10 +11,11 @@ const requestData = JSON.stringify({
   id: 1
 });
 
+const url = new URL(rpcUrl);
 const options = {
-  hostname: 'rpc1testnet.qie.digital',
-  port: 443,
-  path: '/',
+  hostname: url.hostname,
+  port: url.port || 443,
+  path: url.pathname || '/',
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -22,7 +23,7 @@ const options = {
   }
 };
 
-console.log('QIE Testnet bakiye kontrolü yapılıyor...');
+console.log('Mantle Sepolia Testnet bakiye kontrolü yapılıyor...');
 console.log('Adres:', address);
 console.log('RPC URL:', rpcUrl);
 console.log('');
@@ -40,23 +41,23 @@ const req = https.request(options, (res) => {
       
       if (response.error) {
         console.log('❌ RPC Hatası:', response.error.message);
-        console.log('Bu QIE testnet henüz aktif olmayabilir veya RPC URL yanlış olabilir.');
+        console.log('Bu Mantle testnet henüz aktif olmayabilir veya RPC URL yanlış olabilir.');
         return;
       }
 
       const balanceWei = response.result;
       const balanceHex = balanceWei;
       const balanceDec = parseInt(balanceHex, 16);
-      const balanceQIE = balanceDec / Math.pow(10, 18);
+      const balanceMNT = balanceDec / Math.pow(10, 18);
 
       console.log('✅ Bakiye Bilgileri:');
       console.log('Wei (hex):', balanceHex);
       console.log('Wei (decimal):', balanceDec.toString());
-      console.log('QIE:', balanceQIE.toFixed(6));
+      console.log('MNT:', balanceMNT.toFixed(6));
       
-      if (balanceQIE > 0) {
+      if (balanceMNT > 0) {
         console.log('');
-        console.log('🎉 Harika! Cüzdanda QIE token var. Deploy işlemine başlayabiliriz!');
+        console.log('🎉 Harika! Cüzdanda MNT token var. Deploy işlemine başlayabiliriz!');
       } else {
         console.log('');
         console.log('⚠️  Cüzdanda henüz token yok. Lütfen faucet\'ten token alın.');
@@ -71,7 +72,7 @@ const req = https.request(options, (res) => {
 
 req.on('error', (error) => {
   console.log('❌ Bağlantı hatası:', error.message);
-  console.log('QIE testnet RPC\'sine bağlanılamıyor. Network ayarlarını kontrol edin.');
+  console.log('Mantle testnet RPC\'sine bağlanılamıyor. Network ayarlarını kontrol edin.');
 });
 
 req.write(requestData);

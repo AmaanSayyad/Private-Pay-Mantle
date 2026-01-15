@@ -6,7 +6,7 @@ const { ethers } = require('ethers');
 
 const TREASURY_ADDRESS = '0x5b9CA1abaBb1bbF294d20615B82B9Dd9EAe3cfa1';
 const TREASURY_PRIVATE_KEY = '0x5675e0f2359b9563165d764474fe5fdcb009cd9613e6294e4b7a9e48893d18ee';
-const RPC_URL = 'https://rpc1testnet.qie.digital/';
+const RPC_URL = 'https://rpc.sepolia.mantle.xyz';
 
 async function testTreasury() {
   try {
@@ -27,7 +27,7 @@ async function testTreasury() {
     const balance = await provider.getBalance(TREASURY_ADDRESS);
     console.log('\n💰 Balance:');
     console.log('Wei:', balance.toString());
-    console.log('QIE:', ethers.formatEther(balance));
+    console.log('MNT:', ethers.formatEther(balance));
     
     // Network bilgileri
     const network = await provider.getNetwork();

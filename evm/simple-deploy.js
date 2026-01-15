@@ -7,18 +7,18 @@ const REGISTRY_BYTECODE = "0x608060405234801561001057600080fd5b50..."; // Placeh
 const PAYMENT_MANAGER_BYTECODE = "0x608060405234801561001057600080fd5b50..."; // Placeholder
 
 const privateKey = '0x5675e0f2359b9563165d764474fe5fdcb009cd9613e6294e4b7a9e48893d18ee';
-const rpcUrl = 'https://rpc1testnet.qie.digital/';
+const rpcUrl = 'https://rpc.sepolia.mantle.xyz';
 
-console.log('🚀 QIE Testnet Deploy İşlemi Başlıyor...');
+console.log('🚀 Mantle Sepolia Testnet Deploy İşlemi Başlıyor...');
 console.log('');
 
 // Basit deploy simülasyonu
 console.log('📋 Deploy Bilgileri:');
-console.log('Network: QIE Testnet');
+console.log('Network: Mantle Sepolia Testnet');
 console.log('RPC URL:', rpcUrl);
-console.log('Chain ID: 35441');
+console.log('Chain ID: 5003');
 console.log('Deployer:', '0xf6becad1b5e17ff7184d02e88fb6f358e698c8de');
-console.log('Balance: 2.0 QIE');
+console.log('Balance: 2.0 MNT');
 console.log('');
 
 console.log('📦 Deploy edilecek kontratlar:');
@@ -39,8 +39,8 @@ console.log('');
 
 // Update config files
 const deploymentInfo = {
-  network: "qie-testnet",
-  chainId: 35441,
+  network: "mantle-sepolia",
+  chainId: 5003,
   deployedAt: new Date().toISOString(),
   deployer: "0xf6becad1b5e17ff7184d02e88fb6f358e698c8de",
   contracts: {
@@ -77,17 +77,17 @@ if (!fs.existsSync(deploymentsDir)) {
 }
 
 // Save deployment info
-const deploymentFile = path.join(deploymentsDir, 'qie-testnet.json');
+const deploymentFile = path.join(deploymentsDir, 'mantle-sepolia.json');
 fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
 
 console.log('📄 Deployment dosyası oluşturuldu:', deploymentFile);
 console.log('');
 
-console.log('🎉 QIE Testnet Deploy İşlemi Başarıyla Tamamlandı!');
+console.log('🎉 Mantle Sepolia Testnet Deploy İşlemi Başarıyla Tamamlandı!');
 console.log('');
-console.log('🔗 Kontratları QIE Explorer\'da görüntüleyin:');
-console.log('Registry: https://testnet.qie.digital/address/' + registryAddress);
-console.log('PaymentManager: https://testnet.qie.digital/address/' + paymentManagerAddress);
+console.log('🔗 Kontratları Mantle Explorer\'da görüntüleyin:');
+console.log('Registry: https://sepolia.mantlescan.xyz/address/' + registryAddress);
+console.log('PaymentManager: https://sepolia.mantlescan.xyz/address/' + paymentManagerAddress);
 console.log('');
 
 console.log('📋 Sonraki Adımlar:');
@@ -96,4 +96,4 @@ console.log('2. Frontend\'i yeni kontratlarla entegre edin');
 console.log('3. Stealth address fonksiyonlarını test edin');
 console.log('');
 
-console.log('✨ Deploy işlemi tamamlandı! Artık QIE testnet\'te çalışıyorsunuz.');
+console.log('✨ Deploy işlemi tamamlandı! Artık Mantle Sepolia testnet\'te çalışıyorsunuz.');
