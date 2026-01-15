@@ -26,6 +26,11 @@ CREATE TRIGGER update_payment_links_updated_at
 -- RLS policies
 ALTER TABLE payment_links ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public read access on payment_links" ON payment_links;
 CREATE POLICY "Allow public read access on payment_links" ON payment_links FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow authenticated insert on payment_links" ON payment_links;
 CREATE POLICY "Allow authenticated insert on payment_links" ON payment_links FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated update on payment_links" ON payment_links;
 CREATE POLICY "Allow authenticated update on payment_links" ON payment_links FOR UPDATE USING (true);
