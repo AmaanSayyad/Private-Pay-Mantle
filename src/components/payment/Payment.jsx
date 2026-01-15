@@ -26,7 +26,7 @@ export default function Payment() {
   const [successData, setSuccessData] = useState(null);
   const [error, setError] = useState(null);
 
-  // QIE wallet integration
+  // Mantle wallet integration
   const { account, isConnected, connect } = useAptos();
 
   // Fetch payment link data from Supabase
@@ -118,15 +118,18 @@ export default function Payment() {
         throw new Error("Transaction failed");
       }
 
-      // Record payment in Supabase, tagging the alias used so we can
-      // compute per-link totals on the dashboard.
-      await recordPayment(
-        account,
-        recipientUsername,
-        parseFloat(amount),
-        result.hash,
-        alias
-      );
+      // Get recipient's wallet address from payment link
+      const recipientPaymentLink = await getPaymentLinkByAlias(alias);
+      const recipientWalletAddress = recipientPaymentLink?.wallet_address || TREASURY_WALLET;
+
+      // Record payment in Supabase
+      await recordPayment({
+        senderAddress: account,
+        recipientAddress: recipientWalletAddress,
+        amount: parseFloat(amount),
+        transactionHash: result.hash,
+        status: 'confirmed'
+      });
 
       // Trigger balance update event
       window.dispatchEvent(new Event('balance-updated'));

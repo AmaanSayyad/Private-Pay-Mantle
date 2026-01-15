@@ -298,7 +298,7 @@ function StepTwo({
                 nextColorScheme === 2 ? "text-black " : "text-white"
               } font-bold text-2xl`}
             >
-              SQUIDL
+              PRIVATEPAY
             </h1>
           </div>
 

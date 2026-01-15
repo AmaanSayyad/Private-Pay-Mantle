@@ -25,7 +25,7 @@ export default function PaymentLinks() {
 
   const loadPaymentLinks = async () => {
     try {
-      // Require a connected QIE wallet to load links
+      // Require a connected Mantle wallet to load links
       if (!account) {
         setPaymentLinks([]);
         setUsername("");
@@ -37,7 +37,7 @@ export default function PaymentLinks() {
 
       // Load username from localStorage (same key used in Dashboard / CreateLinkDialog)
       const savedUsername =
-        localStorage.getItem(`qie_username_${account}`) || account.slice(2, 8);
+        localStorage.getItem(`mantle_username_${account}`) || account.slice(2, 8);
       setUsername(savedUsername);
 
       const links = await getPaymentLinks(account);
