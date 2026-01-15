@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 async function main() {
-  console.log("Deploying QIE Stealth Address contracts...");
+  console.log("Deploying Mantle Stealth Address contracts...");
 
   // Get the deployer account
   const [deployer] = await ethers.getSigners();
@@ -27,9 +27,11 @@ async function main() {
   console.log("PaymentManager deployed to:", paymentManagerAddress);
 
   // Save deployment addresses to a JSON file
+  const network = await deployer.provider.getNetwork();
+  const networkName = network.chainId === 5003n ? "mantle-sepolia" : network.chainId === 5000n ? "mantle-mainnet" : "mantle";
   const deploymentInfo = {
-    network: "qie-testnet",
-    chainId: (await deployer.provider.getNetwork()).chainId.toString(),
+    network: networkName,
+    chainId: network.chainId.toString(),
     deployedAt: new Date().toISOString(),
     deployer: deployer.address,
     contracts: {
@@ -51,7 +53,7 @@ async function main() {
   }
 
   // Save deployment info
-  const deploymentFile = path.join(deploymentsDir, "qie-testnet.json");
+  const deploymentFile = path.join(deploymentsDir, `${networkName}.json`);
   fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
   console.log("\nDeployment info saved to:", deploymentFile);
 
