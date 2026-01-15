@@ -68,7 +68,7 @@ export default function Transactions() {
   }, [account]); // Depend on account
 
   const groupedTransactions = useMemo(() => {
-    // Show all transactions (no filtering needed since we only use QIE now)
+    // Show all transactions (no filtering needed since we only use Mantle now)
     return transactions?.reduce((acc, tx) => {
       const dateKey = format(new Date(tx.created_at), "MM/dd/yyyy");
       if (!acc[dateKey]) {
@@ -79,20 +79,20 @@ export default function Transactions() {
     }, {});
   }, [transactions]);
 
-  // Calculate network statistics - only show QIE
+  // Calculate network statistics - only show Mantle
   const networkStats = useMemo(() => {
     if (!transactions || transactions.length === 0) {
-      return { total: 0, qie: 0 };
+      return { total: 0, mantle: 0 };
     }
 
     const stats = transactions.reduce((acc, tx) => {
       const network = determineTransactionNetwork(tx);
       acc.total++;
-      if (network === 'qie') {
-        acc.qie = (acc.qie || 0) + 1;
+      if (network === 'mantle') {
+        acc.mantle = (acc.mantle || 0) + 1;
       }
       return acc;
-    }, { total: 0, qie: 0 });
+    }, { total: 0, mantle: 0 });
 
     return stats;
   }, [transactions]);

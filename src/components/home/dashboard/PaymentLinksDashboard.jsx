@@ -33,7 +33,7 @@ export default function PaymentLinksDashboard({ user }) {
   const loadPaymentLinks = async () => {
     if (account) {
       // Get username
-      const savedUsername = localStorage.getItem(`qie_username_${account}`);
+      const savedUsername = localStorage.getItem(`mantle_username_${account}`);
       setUsername(savedUsername || account.slice(2, 8));
 
       // Get payment links from Supabase

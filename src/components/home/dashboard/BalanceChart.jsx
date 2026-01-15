@@ -14,7 +14,7 @@ import { safeGetJSON, safeSetJSON } from "../../../utils/localStorageUtils.js";
 import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
 import { formatMNTAmount } from "../../../utils/mantle-utils.js";
 
-const BALANCE_HISTORY_KEY = 'qie_balance_history';
+const BALANCE_HISTORY_KEY = 'mantle_balance_history';
 
 // Get balance history from localStorage
 function getBalanceHistory(account) {
@@ -50,15 +50,15 @@ function updateBalanceHistory(account, newBalance) {
   // Only update if balance actually changed (deposit or withdrawal)
   if (todayIndex >= 0) {
     const oldBalance = history[todayIndex].balance;
-    // Update today's balance only if it changed (using higher precision for QIE)
-    if (Math.abs(oldBalance - newBalance) > 0.000001) { // 6 decimal precision for QIE
+    // Update today's balance only if it changed (using higher precision for Mantle)
+    if (Math.abs(oldBalance - newBalance) > 0.000001) { // 6 decimal precision for Mantle
       history[todayIndex].balance = parseFloat(newBalance.toFixed(6));
     }
   } else {
     // Add new entry for today with the new balance
     history.push({
       date: today,
-      balance: parseFloat(newBalance.toFixed(6)), // 6 decimal precision for QIE
+      balance: parseFloat(newBalance.toFixed(6)), // 6 decimal precision for Mantle
     });
     
     // Keep only last 30 days
@@ -89,7 +89,7 @@ function generateChartData(account, currentBalance) {
       const balance = dateStr === today ? (currentBalance || 0) : 0;
       history.push({
         date: dateStr,
-        balance: parseFloat(balance.toFixed(6)), // 6 decimal precision for QIE
+        balance: parseFloat(balance.toFixed(6)), // 6 decimal precision for Mantle
       });
     }
     history.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -108,18 +108,18 @@ function generateChartData(account, currentBalance) {
       // New day - start with yesterday's balance, then update to current
       history.push({
         date: today,
-        balance: parseFloat((currentBalance || 0).toFixed(6)), // 6 decimal precision for QIE
+        balance: parseFloat((currentBalance || 0).toFixed(6)), // 6 decimal precision for Mantle
       });
     } else if (todayIndex >= 0) {
       // Update today's balance - this is where growth happens
       // If balance increased, it shows as upward trend
       // If balance decreased, it shows as downward trend
-      history[todayIndex].balance = parseFloat((currentBalance || 0).toFixed(6)); // 6 decimal precision for QIE
+      history[todayIndex].balance = parseFloat((currentBalance || 0).toFixed(6)); // 6 decimal precision for Mantle
     } else {
       // No yesterday data, just add today
       history.push({
         date: today,
-        balance: parseFloat((currentBalance || 0).toFixed(6)), // 6 decimal precision for QIE
+        balance: parseFloat((currentBalance || 0).toFixed(6)), // 6 decimal precision for Mantle
       });
     }
     
@@ -167,7 +167,7 @@ function generateChartData(account, currentBalance) {
       
       data.push({
         date: dateStr,
-        balance: parseFloat(previousBalance.toFixed(6)), // 6 decimal precision for QIE
+        balance: parseFloat(previousBalance.toFixed(6)), // 6 decimal precision for Mantle
       });
     }
   }
