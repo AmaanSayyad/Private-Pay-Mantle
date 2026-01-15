@@ -652,6 +652,12 @@ export async function getUserByUsername(username) {
   if (!supabase) return null;
   
   try {
+    // Validate username input
+    if (!username || typeof username !== 'string') {
+      console.warn('Invalid username provided:', username);
+      return null;
+    }
+    
     // Normalize username to lowercase
     const normalizedUsername = username.toLowerCase().trim();
     console.log('Looking up username/alias:', normalizedUsername);

@@ -272,7 +272,7 @@ export default function MantleWalletProvider({ children }) {
   );
 }
 
-// Backward compatibility hooks
+// Backward compatibility hooks (deprecated - use useMantleWallet instead)
 export const useQIEWallet = useMantleWallet;
 export const useAptos = () => {
   const mantleWallet = useMantleWallet();
