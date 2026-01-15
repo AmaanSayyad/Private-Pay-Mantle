@@ -1,8 +1,8 @@
 # Private-Pay 🐙
 
-> **The first on-chain untraceable, unidentifiable private payments on QIE**
+> **The first on-chain untraceable, unidentifiable private payments on Mantle Network**
 
-[![QIE](https://img.shields.io/badge/QIE-Blockchain-blue)](https://qie.digital/)
+[![Mantle](https://img.shields.io/badge/Mantle-Blockchain-blue)](https://www.mantle.xyz/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Solidity](https://img.shields.io/badge/Solidity-Smart%20Contracts-red)](https://soliditylang.org/)
 
@@ -90,7 +90,7 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 
 #### 2. Receive Payment 💸
 - Payer accesses link → generates unique stealth address
-- Payment sent to stealth address on QIE
+- Payment sent to stealth address on Mantle Network
 - Transaction is unlinkable to recipient's identity
 
 #### 3. Manage Funds 💰
@@ -133,11 +133,11 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 
 ### Built With
 
-- **Blockchain**: QIE (Solidity smart contracts)
+- **Blockchain**: Mantle Network (Solidity smart contracts)
 - **Frontend**: React + Vite
 - **Database**: Supabase (PostgreSQL)
 - **Cryptography**: @noble/secp256k1, @noble/hashes
-- **Wallet**: MetaMask (QIE wallet)
+- **Wallet**: MetaMask (Mantle wallet)
 
 ---
 
@@ -169,7 +169,7 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - ✅ Stealth address generation
 - ✅ Payment link system
 - ✅ Dashboard and monitoring
-- ✅ QIE wallet integration
+- ✅ Mantle wallet integration
 
 ### Phase 2: Enhanced Privacy 🚧
 - 🚧 Zero-knowledge proofs (Plonky2)
@@ -194,6 +194,8 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - Protection for high-value transactions
 - Privacy for everyone, everywhere
 
+> 📋 **See [FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md) for 20+ additional features we can build!**
+
 ---
 
 ## 🏗️ Architecture
@@ -203,7 +205,7 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 ```
 ┌─────────────────┐
 │   User Wallet   │
-│ (MetaMask/QIE)  │
+│ (MetaMask/Mantle)│
 └────────┬────────┘
          │
          ▼
@@ -221,7 +223,7 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
          │
          ▼
 ┌─────────────────────────────────┐
-│      QIE Blockchain             │
+│      Mantle Network             │
 │  ┌──────────────────────────┐   │
 │  │  Solidity Smart Contracts│   │
 │  │  - StealthAddressRegistry│   │
@@ -243,7 +245,7 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
    ├─ Compute shared secret: ECDH(ephemeralPriv, viewingPub)
    ├─ Compute tweak: SHA256(sharedSecret || k)
    ├─ Derive stealth public key: stealthPub = spendPub + (tweak * G)
-   └─ Derive QIE address: keccak256(stealthPub)[12:32]
+   └─ Derive Mantle address: keccak256(stealthPub)[12:32]
 
 3. Payment Detection
    ├─ Recipient computes: ECDH(viewingPriv, ephemeralPub)
@@ -277,7 +279,7 @@ graph TB
     end
     
     subgraph "Blockchain Layer"
-        QIE[QIE Blockchain]
+        Mantle[Mantle Network]
         Solidity[Solidity Contracts]
         Events[Event System]
     end
@@ -289,13 +291,13 @@ graph TB
     end
     
     UI --> DB
-    Wallet --> QIE
+    Wallet --> Mantle
     Dashboard --> DB
     UI --> Stealth
-    Stealth --> QIE
+    Stealth --> Mantle
     Stealth --> ECDH
     ECDH --> Crypto
-    Solidity --> QIE
+    Solidity --> Mantle
     Events --> Workers
 ```
 
@@ -307,7 +309,7 @@ sequenceDiagram
     participant Frontend
     participant Backend
     participant Crypto as Cryptographic Engine
-    participant QIE as QIE Blockchain
+    participant Mantle as Mantle Network
     
     Payer->>Frontend: Access Payment Link
     Frontend->>Supabase: Request Payment Link
@@ -328,12 +330,12 @@ sequenceDiagram
     Note over Crypto: stealthPub = spendPub + (tweak * G)
     Crypto-->>Frontend: stealthPub
     
-    Frontend->>Crypto: Derive QIE Address
+    Frontend->>Crypto: Derive Mantle Address
     Note over Crypto: address = keccak256(stealthPub)[12:32]
     Crypto-->>Frontend: stealthAddress
     
     Frontend-->>Payer: Display Stealth Address
-    Payer->>QIE: Send Payment to stealthAddress
+    Payer->>Mantle: Send Payment to stealthAddress
 ```
 
 ### 3. Payment Flow - Complete Process
@@ -345,7 +347,7 @@ sequenceDiagram
     participant Frontend
     participant Backend
     participant Workers as Monitoring Workers
-    participant QIE as QIE Blockchain
+    participant Mantle as Mantle Network
     participant Solidity as Solidity Contracts
     
     Note over Recipient: Setup Phase
@@ -360,8 +362,8 @@ sequenceDiagram
     Supabase-->>Frontend: Meta Address
     Frontend->>Frontend: Generate Stealth Address
     Frontend-->>Payer: Display Payment Form
-    Payer->>QIE: Send QIE to Treasury Wallet
-    QIE-->>Frontend: Transaction Confirmed
+    Payer->>Mantle: Send MNT to Treasury Wallet
+    Mantle-->>Frontend: Transaction Confirmed
     
     Note over Frontend: Recording Phase
     Frontend->>Supabase: Record Payment
@@ -373,8 +375,8 @@ sequenceDiagram
     Frontend->>Supabase: Query Payments
     Supabase-->>Frontend: Payment History
     Recipient->>Frontend: Withdraw Funds
-    Frontend->>QIE: Transfer from Treasury
-    QIE-->>Recipient: Funds Received
+    Frontend->>Mantle: Transfer from Treasury
+    Mantle-->>Recipient: Funds Received
 ```
 
 ### 4. Privacy Infrastructure Stack
@@ -422,15 +424,15 @@ graph TD
 sequenceDiagram
     participant Frontend
     participant Supabase as Supabase Database
-    participant QIE as QIE Blockchain
+    participant Mantle as Mantle Network
     participant Events as Event System
     
     loop User Checks Dashboard
         Frontend->>Supabase: Query Payment Links
         Supabase-->>Frontend: Return Payment Links
         
-        Frontend->>QIE: Check Transaction Status
-        QIE-->>Frontend: Transaction Data
+        Frontend->>Mantle: Check Transaction Status
+        Mantle-->>Frontend: Transaction Data
         
         alt Transaction Found
             Frontend->>Supabase: Update Payment Record
@@ -439,8 +441,8 @@ sequenceDiagram
     end
     
     Note over Frontend,Supabase: Recovery Scenario
-    Frontend->>QIE: Fetch All Transactions
-    QIE-->>Frontend: Transaction History
+    Frontend->>Mantle: Fetch All Transactions
+    Mantle-->>Frontend: Transaction History
     Frontend->>Frontend: Rebuild Database Records
     Frontend->>Supabase: Restore Payment Data
 ```
@@ -454,7 +456,7 @@ sequenceDiagram
     participant Backend
     participant Crypto as Crypto Engine
     participant Solidity as Solidity Contract
-    participant QIE as QIE Blockchain
+    participant Mantle as Mantle Network
     
     User->>Frontend: Sign In with Wallet
     Frontend->>Crypto: Generate Key Pairs
@@ -534,16 +536,15 @@ graph TB
 ### Prerequisites
 
 - Node.js 18+
-- QIE CLI (if available)
-- MetaMask Wallet
+- MetaMask Wallet (configured for Mantle Network)
 - Supabase account
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/AmaanSayyad/Private-Pay-QIE.git
-cd Private-Pay-QIE
+git clone https://github.com/AmaanSayyad/Private-Pay-Mantle.git
+cd Private-Pay-Mantle
 ```
 
 2. **Install dependencies**
@@ -565,12 +566,12 @@ VITE_TREASURY_WALLET_ADDRESS=your_treasury_wallet_address
 # Website Configuration (Required)
 VITE_WEBSITE_HOST=privatepay.me
 
-# QIE Network Configuration (Optional - has defaults)
-VITE_QIE_TESTNET_RPC_URL=https://rpc1testnet.qie.digital/
-VITE_QIE_TESTNET_CHAIN_ID=1983
-VITE_QIE_TESTNET_EXPLORER_URL=https://testnet.qie.digital
-VITE_QIE_STEALTH_REGISTRY_ADDRESS=0x084e08c8011ed2b519ac844836c49efa944c5921
-VITE_QIE_PAYMENT_MANAGER_ADDRESS=0x0ab4d2d7642d2ac00206042b87bfc82a6f96737b
+# Mantle Network Configuration (Optional - has defaults)
+VITE_MANTLE_TESTNET_RPC_URL=https://rpc.sepolia.mantle.xyz
+VITE_MANTLE_TESTNET_CHAIN_ID=5003
+VITE_MANTLE_TESTNET_EXPLORER_URL=https://sepolia.mantlescan.xyz
+VITE_MANTLE_STEALTH_REGISTRY_ADDRESS=your_stealth_registry_address
+VITE_MANTLE_PAYMENT_MANAGER_ADDRESS=your_payment_manager_address
 
 # App Environment (Optional)
 VITE_APP_ENVIRONMENT=dev
@@ -578,8 +579,8 @@ VITE_APP_ENVIRONMENT=dev
 # Dynamic Wallet Integration (Optional)
 VITE_DYNAMIC_ENV_ID=your_dynamic_environment_id
 
-# Legacy Contract Address (Optional)
-VITE_SQUIDL_STEALTHSIGNER_CONTRACT_ADDRESS=your_contract_address
+# Legacy Contract Address (Optional - for backward compatibility)
+VITE_STEALTHSIGNER_CONTRACT_ADDRESS=your_contract_address
 
 # Treasury Private Key (Optional - for automated withdrawals)
 VITE_TREASURY_PRIVATE_KEY=your_treasury_private_key
@@ -602,19 +603,36 @@ VITE_ENABLE_LOCAL_DNS=false
 npm run dev
 ```
 
-5. **Access the app**
-- Application: http://localhost:5173
+5. **Run database migrations**
+   - Go to your Supabase SQL Editor
+   - Run `supabase/migrations/000_apply_all_migrations.sql`
+   - See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed instructions
 
+6. **Access the app**
+   - Application: http://localhost:5173
+
+> 📚 **Need help?** Check out [QUICK_START.md](./QUICK_START.md) for step-by-step setup instructions.
 
 ---
+## 📚 Additional Documentation
+
+- **[FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md)** - 20+ features we can build
+- **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** - Supabase setup guide
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Complete deployment checklist
+- **[QUICK_START.md](./QUICK_START.md)** - Quick start guide
+- **[MIGRATION_STATUS.md](./MIGRATION_STATUS.md)** - Database migration status
+
+---
+
 ## 🙏 Acknowledgments
 
 ### Technology
 
-- **QIE Foundation** - The chain with low network fees and fast settlement
+- **Mantle Network** - Modular Ethereum L2 with low fees and high performance
 - **Oasis Protocol** - Inspiration from ROFL and Sapphire
 - **BIP 0352 / EIP 5564** - Stealth address standards
 - **@noble** libraries - Cryptographic primitives
+- **Supabase** - Database and backend infrastructure
 ---
 
 <p align="center">
