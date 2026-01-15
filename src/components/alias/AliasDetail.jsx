@@ -234,7 +234,7 @@ export default function AliasDetail() {
                 scheme === "1" ? "text-[#484B4E]" : "text-white"
               )}
             >
-              SQUIDL
+              PRIVATEPAY
             </h1>
           </div>
 

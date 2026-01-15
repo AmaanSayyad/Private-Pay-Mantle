@@ -41,7 +41,7 @@ export default function PaymentHeader() {
         >
           <Icons.link className="text-white" />
           <h1 className={"text-sm font-medium text-white"}>
-            {isSignedIn ? "Create Link" : "Create your Squidl"}
+            {isSignedIn ? "Create Link" : "Create your PRIVATEPAY"}
           </h1>
         </Button>
 
