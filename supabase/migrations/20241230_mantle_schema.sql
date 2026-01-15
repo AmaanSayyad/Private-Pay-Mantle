@@ -84,15 +84,30 @@ ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_announcements ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access
+DROP POLICY IF EXISTS "Allow public read access on users" ON users;
 CREATE POLICY "Allow public read access on users" ON users FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read access on meta_addresses" ON meta_addresses;
 CREATE POLICY "Allow public read access on meta_addresses" ON meta_addresses FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read access on transactions" ON transactions;
 CREATE POLICY "Allow public read access on transactions" ON transactions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read access on payment_announcements" ON payment_announcements;
 CREATE POLICY "Allow public read access on payment_announcements" ON payment_announcements FOR SELECT USING (true);
 
 -- Allow authenticated insert/update
+DROP POLICY IF EXISTS "Allow authenticated insert on users" ON users;
 CREATE POLICY "Allow authenticated insert on users" ON users FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated insert on meta_addresses" ON meta_addresses;
 CREATE POLICY "Allow authenticated insert on meta_addresses" ON meta_addresses FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated insert on transactions" ON transactions;
 CREATE POLICY "Allow authenticated insert on transactions" ON transactions FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated insert on payment_announcements" ON payment_announcements;
 CREATE POLICY "Allow authenticated insert on payment_announcements" ON payment_announcements FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow authenticated update on transactions" ON transactions;
 CREATE POLICY "Allow authenticated update on transactions" ON transactions FOR UPDATE USING (true);
