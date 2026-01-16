@@ -14,7 +14,6 @@ import BalanceChart from "./BalanceChart.jsx";
 import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
 import { formatMNTAmount } from "../../../utils/mantle-utils.js";
 import { notifyPaymentReceived, requestNotificationPermission } from "../../../utils/pwa-utils.js";
-import MobileSupportAlert from "../../shared/MobileSupportAlert.jsx";
 
 export default function Dashboard() {
   const [openQr, setOpenQr] = useState(false);
@@ -84,7 +83,6 @@ export default function Dashboard() {
       >
         <div className="flex flex-col items-center py-20 w-full">
           <div className="w-full max-w-lg flex flex-col items-center gap-4 pt-12 pb-20">
-            <MobileSupportAlert />
             <ReceiveCard setOpenQr={setOpenQr} />
             <MergedBalanceCard balance={balance} isLoading={isLoadingBalance} />
             <PaymentLinksDashboard />
