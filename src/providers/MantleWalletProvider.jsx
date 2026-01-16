@@ -4,7 +4,39 @@ import { MANTLE_CONFIG, addMantleNetworkToMetaMask, switchToMantleNetwork } from
 import { mantleBlockchainService } from '../lib/mantle/mantleBlockchainService.js';
 import { registerUser } from '../lib/supabase.js';
 import toast from 'react-hot-toast';
-import MetaMaskSDK from '@metamask/sdk';
+
+// Lazy load MetaMask SDK to prevent blocking initialization
+let MetaMaskSDK = null;
+let SDKLoading = false;
+const loadMetaMaskSDK = async () => {
+  if (MetaMaskSDK) return MetaMaskSDK;
+  if (SDKLoading) {
+    // Wait for ongoing load
+    while (SDKLoading) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return MetaMaskSDK;
+  }
+  
+  SDKLoading = true;
+  try {
+    // Use dynamic import with error handling
+    const module = await import('@metamask/sdk').catch(err => {
+      console.warn('MetaMask SDK import failed:', err);
+      return null;
+    });
+    
+    if (module && module.default) {
+      MetaMaskSDK = module.default;
+    }
+  } catch (error) {
+    console.warn('Failed to load MetaMask SDK:', error);
+  } finally {
+    SDKLoading = false;
+  }
+  
+  return MetaMaskSDK;
+};
 
 /**
  * @typedef {Object} MantleWalletContextType
@@ -52,7 +84,7 @@ export default function MantleWalletProvider({ children }) {
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   const [metaMaskSDK, setMetaMaskSDK] = useState(null);
 
-  // Initialize MetaMask SDK for mobile support
+  // Initialize MetaMask SDK for mobile support (non-blocking)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -60,21 +92,41 @@ export default function MantleWalletProvider({ children }) {
     const isAndroid = /Android/.test(navigator.userAgent);
     const isMobile = isIOS || isAndroid;
 
-    // Only initialize SDK on mobile devices
+    // Only initialize SDK on mobile devices and only if window.ethereum is not available
+    // Use setTimeout to ensure this doesn't block initial render
     if (isMobile && !window.ethereum) {
-      try {
-        const sdk = new MetaMaskSDK({
-          dappMetadata: {
-            name: 'PrivatePay',
-            url: window.location.origin,
-          },
-          injectProvider: true,
-          checkInstallation: true,
-        });
-        setMetaMaskSDK(sdk);
-      } catch (error) {
-        console.error('Failed to initialize MetaMask SDK:', error);
-      }
+      // Delay SDK initialization to not block app rendering
+      setTimeout(() => {
+        loadMetaMaskSDK()
+          .then((SDK) => {
+            if (!SDK) {
+              console.log('MetaMask SDK not available, app will work without it');
+              return;
+            }
+            
+            try {
+              const sdk = new SDK({
+                dappMetadata: {
+                  name: 'PrivatePay',
+                  url: window.location.origin,
+                },
+                injectProvider: true,
+                checkInstallation: false, // Disable to prevent redirects
+                shouldShimWeb3: false, // Don't shim web3
+                communicationLayerPreference: 'socket', // Use socket for better mobile support
+              });
+              setMetaMaskSDK(sdk);
+              console.log('MetaMask SDK initialized successfully');
+            } catch (error) {
+              console.warn('Failed to initialize MetaMask SDK:', error);
+              // Don't set SDK on error - app should still work without it
+            }
+          })
+          .catch((error) => {
+            console.warn('Failed to load MetaMask SDK:', error);
+            // App should continue to work without SDK
+          });
+      }, 100); // Small delay to ensure app renders first
     }
   }, []);
 
@@ -162,14 +214,18 @@ export default function MantleWalletProvider({ children }) {
     const isAndroid = /Android/.test(navigator.userAgent);
     const isMobile = isIOS || isAndroid;
     
-    // Wait a bit for SDK to inject provider on mobile
+    // Wait a bit for SDK to inject provider on mobile (but don't wait too long)
     if (isMobile && !window.ethereum && metaMaskSDK) {
-      // Give SDK time to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Give SDK time to initialize, but limit wait time
+      let waited = 0;
+      while (!window.ethereum && waited < 2000) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        waited += 100;
+      }
     }
 
     // Check for desktop MetaMask or SDK-injected provider
-    if (typeof window.ethereum !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
       setIsConnecting(true);
       try {
         const accounts = await window.ethereum.request({
