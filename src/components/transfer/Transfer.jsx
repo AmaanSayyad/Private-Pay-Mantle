@@ -726,8 +726,8 @@ export function Transfer() {
 
                 <div className="size-9 bg-white rounded-full p-1">
                   <img
-                    src="/assets/oasis-logo.png"
-                    alt="ic"
+                    src="/assets/squidl-only.svg"
+                    alt="privatepay-logo"
                     className="object-contain w-full h-full"
                   />
                 </div>

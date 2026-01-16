@@ -71,7 +71,7 @@ export function showNotification(title, options = {}) {
 
   const notificationOptions = {
     body: options.body || '',
-    icon: options.icon || '/assets/squidl-logo.png',
+    icon: options.icon || '/assets/squidl-logo-only.png',
     badge: '/assets/squidl-only.svg',
     tag: options.tag || 'default',
     requireInteraction: options.requireInteraction || false,
@@ -112,7 +112,7 @@ export function notifyPaymentReceived(amount, fromAddress) {
     body: `You received ${amount} MNT from ${shortAddress}`,
     tag: 'payment-received',
     requireInteraction: false,
-    icon: '/assets/squidl-logo.png',
+    icon: '/assets/squidl-logo-only.png',
     onClick: () => {
       window.location.href = '/';
     }

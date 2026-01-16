@@ -61,10 +61,7 @@ export default function AuthLayout() {
           <DynamicEmbeddedWidget background="with-border" />
 
           <div className="flex flex-col items-center mt-2">
-            <div className="mt-8 opacity-60">Powered by</div>
-            <div className="mt-1">
-              <img src="/assets/oasis-long-logo.svg" className="w-32" />
-            </div>
+            <div className="mt-8 opacity-60">Powered by Mantle Network</div>
           </div>
         </div>
       </div>

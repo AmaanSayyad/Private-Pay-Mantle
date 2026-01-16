@@ -12,16 +12,16 @@ export default function PrivateBalancePage() {
 
 function Transactions() {
   return (
-    <div className="overflow-hidden rounded-4xl bg-oasis-blue ">
+    <div className="overflow-hidden rounded-4xl bg-primary">
       <div className="w-full rounded-2xl h-14 p flex items-center justify-center gap-2 text-sm text-white">
         <div className="bg-white size-6 rounded-xl">
           <img
-            src="/assets/oasis-logo.png"
-            alt="oasis-logo"
+            src="/assets/squidl-only.svg"
+            alt="privatepay-logo"
             className="w-full h-full object-contain"
           />
         </div>
-        This transactions benefit oasis privacy protocol
+        This transactions benefit Mantle privacy protocol
       </div>
       <div
         className={

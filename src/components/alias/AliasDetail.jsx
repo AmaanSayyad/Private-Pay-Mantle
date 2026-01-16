@@ -407,7 +407,7 @@ export default function AliasDetail() {
                         chainImg={
                           tx.chain.imageUrl
                             ? tx.chain.imageUrl
-                            : "/assets/line-logo.png"
+                            : "/assets/eth-logo.png"
                         }
                         title={"Receive"}
                         subtitle={`from ${shortenId(tx.fromAddress)}`}
