@@ -114,9 +114,12 @@ export default function MantleWalletProvider({ children }) {
                 checkInstallation: false, // Disable to prevent redirects
                 shouldShimWeb3: false, // Don't shim web3
                 communicationLayerPreference: 'socket', // Use socket for better mobile support
+                useDeeplink: true, // Enable deep linking
                 openDeeplink: (deeplink) => {
-                  // Custom deeplink handler to ensure connection request is included
+                  // Custom deeplink handler
                   console.log('Opening MetaMask deeplink:', deeplink);
+                  // Store flag before navigating
+                  localStorage.setItem('metamask_auto_connect', 'true');
                   window.location.href = deeplink;
                 },
               });
@@ -220,60 +223,13 @@ export default function MantleWalletProvider({ children }) {
     const isAndroid = /Android/.test(navigator.userAgent);
     const isMobile = isIOS || isAndroid;
     
-    // On mobile, try to use MetaMask SDK's connect method first
-    if (isMobile && metaMaskSDK && typeof metaMaskSDK.connect === 'function') {
-      setIsConnecting(true);
-      try {
-        // Use SDK's connect method which handles mobile flow properly
-        const accounts = await metaMaskSDK.connect();
-        
-        if (accounts && accounts.length > 0) {
-          // SDK connected, now set up provider
-          if (window.ethereum && typeof window.ethereum.request === 'function') {
-            const ethProvider = new ethers.BrowserProvider(window.ethereum);
-            setProvider(ethProvider);
-            
-            const account = accounts[0];
-            setAccount(account);
-            setIsConnected(true);
-            
-            const signer = await ethProvider.getSigner();
-            setSigner(signer);
-            
-            // Register user
-            try {
-              const user = await registerUser(account);
-              if (user) {
-                const username = user.username || account.slice(2, 8).toLowerCase();
-                localStorage.setItem(`mantle_username_${account}`, username);
-              }
-            } catch (regError) {
-              console.warn('Could not register user:', regError);
-            }
-            
-            const network = await ethProvider.getNetwork();
-            const currentChainId = Number(network.chainId);
-            setChainId(currentChainId);
-            setIsCorrectNetwork(currentChainId === MANTLE_CONFIG.chainId);
-            
-            toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
-            setIsConnecting(false);
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn('SDK connect failed, trying fallback:', error);
-        setIsConnecting(false);
-      }
-    }
-    
-    // Wait a bit for SDK to inject provider on mobile (but don't wait too long)
+    // On mobile, if no provider yet, try to wait for SDK to inject it
     if (isMobile && !window.ethereum && metaMaskSDK) {
-      // Give SDK time to initialize, but limit wait time
+      // Give SDK time to inject provider
       let waited = 0;
-      while (!window.ethereum && waited < 2000) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        waited += 100;
+      while (!window.ethereum && waited < 3000) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        waited += 200;
       }
     }
 
@@ -424,21 +380,35 @@ export default function MantleWalletProvider({ children }) {
         localStorage.setItem('metamask_auto_connect', 'true');
         toast.info('Opening in MetaMask app...');
         
-        // Use MetaMask SDK's connectAndSign method if available, otherwise use deep link
-        if (metaMaskSDK && typeof metaMaskSDK.connect === 'function') {
+        // Use MetaMask SDK's connect method if available
+        if (metaMaskSDK) {
           try {
-            setIsConnecting(true);
-            const accounts = await metaMaskSDK.connect();
-            if (accounts && accounts.length > 0) {
-              // Connection successful, will be handled by the provider check above
-              return;
+            // The SDK should handle the deep link and connection
+            // But we'll also set up the deep link as fallback
+            if (typeof metaMaskSDK.connect === 'function') {
+              setIsConnecting(true);
+              const result = await metaMaskSDK.connect();
+              console.log('SDK connect result:', result);
+              // If SDK connected, the provider should be injected
+              // Wait a moment and retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              if (window.ethereum) {
+                // Retry connection with injected provider
+                return connect();
+              }
             }
           } catch (error) {
             console.warn('SDK connect failed, using deep link:', error);
           }
         }
         
-        const deepLink = `https://metamask.app.link/dapp/${encodeURIComponent(window.location.href)}`;
+        // Fallback: use direct deep link
+        // Add connection request to URL so MetaMask knows to prompt
+        const currentUrl = window.location.href;
+        const connectUrl = currentUrl.includes('?') 
+          ? `${currentUrl}&connect=true`
+          : `${currentUrl}?connect=true`;
+        const deepLink = `https://metamask.app.link/dapp/${encodeURIComponent(connectUrl)}`;
         window.location.href = deepLink;
       } else {
         toast.error('Please install MetaMask to connect your wallet');
@@ -546,8 +516,9 @@ export default function MantleWalletProvider({ children }) {
     const isAndroid = /Android/.test(navigator.userAgent);
     const isMobile = isIOS || isAndroid;
     
-    // Check if we should auto-connect (set when deep linking)
-    const shouldAutoConnect = localStorage.getItem('metamask_auto_connect') === 'true';
+    // Check if we should auto-connect (set when deep linking or URL has connect param)
+    const shouldAutoConnect = localStorage.getItem('metamask_auto_connect') === 'true' || 
+                              new URLSearchParams(window.location.search).get('connect') === 'true';
     
     // Also check if we're in MetaMask's browser (has ethereum provider)
     const isInMetaMaskBrowser = window.ethereum && window.ethereum.isMetaMask;
@@ -558,23 +529,18 @@ export default function MantleWalletProvider({ children }) {
         if (window.ethereum && typeof window.ethereum.request === 'function') {
           localStorage.removeItem('metamask_auto_connect');
           
-          // Try to connect using SDK first if available
-          if (metaMaskSDK && typeof metaMaskSDK.connect === 'function') {
-            try {
-              setIsConnecting(true);
-              const accounts = await metaMaskSDK.connect();
-              if (accounts && accounts.length > 0) {
-                // Connection will be handled by the connect function
-                return;
-              }
-            } catch (error) {
-              console.warn('Auto-connect via SDK failed:', error);
-            }
+          // Remove connect param from URL
+          if (window.location.search.includes('connect=true')) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('connect');
+            window.history.replaceState({}, '', url.toString());
           }
           
-          // Fallback to direct connection request
+          // Direct connection request - this will show the popup
           try {
             setIsConnecting(true);
+            console.log('Auto-connecting to MetaMask...');
+            
             const accounts = await window.ethereum.request({
               method: 'eth_requestAccounts',
             });
@@ -608,15 +574,18 @@ export default function MantleWalletProvider({ children }) {
             }
           } catch (error) {
             console.warn('Auto-connect failed:', error);
+            if (error.code === 4001) {
+              toast.error('Connection rejected by user');
+            }
           } finally {
             setIsConnecting(false);
           }
         }
-      }, 2000); // Wait 2 seconds for MetaMask to initialize
+      }, 1500); // Wait 1.5 seconds for MetaMask to initialize
       
       return () => clearTimeout(timeout);
     }
-  }, [isConnected, isConnecting, metaMaskSDK]);
+  }, [isConnected, isConnecting]);
 
   const contextValue = {
     account,
