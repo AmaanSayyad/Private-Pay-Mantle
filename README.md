@@ -636,6 +636,14 @@ npm run dev
 - **Supabase** - Database and backend infrastructure
 ---
 
+## 🔗 Links & Resources
+- **Pitch Deck:** https://docs.google.com/presentation/d/1CZx4tTtaLhS0rbD4v0tlDC7OkFB0GPcWqbD43B9dXX0/edit?usp=sharing
+- **Demo Video:** 
+- **Pitch Video:** https://youtu.be/p5Pgx0ZBUqA
+- **Live Website:** https://private-pay-mantle-three.vercel.app/
+- **Github:** https://github.com/AmaanSayyad/Private-Pay-Mantle
+---
+
 <p align="center">
   <strong>Built with 🐙 by developers who believe privacy is a fundamental right</strong>
 </p>
