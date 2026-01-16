@@ -347,6 +347,19 @@ export async function createPaymentLink(linkData) {
 
     if (error) throw error;
     console.log('Payment link created:', data);
+    
+    // Award points for creating payment link
+    if (linkData.walletAddress) {
+      try {
+        await awardPoints(linkData.walletAddress, 'payment_link_created', {
+          relatedPaymentLinkId: data.id,
+          description: `Payment link created: ${normalizedAlias}`
+        });
+      } catch (pointsError) {
+        console.warn('Error awarding points for payment link:', pointsError);
+      }
+    }
+    
     return data;
   } catch (error) {
     console.error('Error creating payment link:', error);
@@ -638,6 +651,61 @@ export async function recordPayment(paymentData) {
       .single();
 
     if (error) throw error;
+    
+    // Award points for payment sent
+    if (paymentData.senderAddress) {
+      try {
+        // Check if this is first payment
+        const { count } = await supabase
+          .from('transactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('sender_address', paymentData.senderAddress)
+          .eq('transaction_type', 'payment');
+        
+        await awardPoints(paymentData.senderAddress, 'payment_sent', {
+          relatedTransactionId: data.id,
+          description: `Payment sent: ${paymentData.amount} MNT`
+        });
+        
+        // First payment bonus
+        if (count === 1) {
+          await awardPoints(paymentData.senderAddress, 'first_payment', {
+            relatedTransactionId: data.id,
+            description: 'First payment bonus!'
+          });
+        }
+      } catch (pointsError) {
+        console.warn('Error awarding points for payment sent:', pointsError);
+      }
+    }
+    
+    // Award points for payment received
+    if (paymentData.recipientAddress) {
+      try {
+        // Check if this is first received payment
+        const { count } = await supabase
+          .from('transactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_address', paymentData.recipientAddress)
+          .eq('transaction_type', 'payment');
+        
+        await awardPoints(paymentData.recipientAddress, 'payment_received', {
+          relatedTransactionId: data.id,
+          description: `Payment received: ${paymentData.amount} MNT`
+        });
+        
+        // First received bonus
+        if (count === 1) {
+          await awardPoints(paymentData.recipientAddress, 'first_received', {
+            relatedTransactionId: data.id,
+            description: 'First payment received bonus!'
+          });
+        }
+      } catch (pointsError) {
+        console.warn('Error awarding points for payment received:', pointsError);
+      }
+    }
+    
     return data;
   } catch (error) {
     console.error('Error recording payment:', error);
@@ -716,4 +784,276 @@ export async function getUserByUsername(username) {
     console.error('Error getting user by username:', error);
     return null;
   }
+}
+
+// ============================================================================
+// POINTS SYSTEM FUNCTIONS
+// ============================================================================
+
+/**
+ * Get user points
+ */
+export async function getUserPoints(walletAddress) {
+  if (!supabase) return { totalPoints: 0, lifetimePoints: 0, level: 1 };
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_points')
+      .select('*')
+      .eq('wallet_address', walletAddress.toLowerCase())
+      .maybeSingle();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    
+    if (!data) {
+      // Create initial points record
+      const { data: newData, error: insertError } = await supabase
+        .from('user_points')
+        .insert([{
+          wallet_address: walletAddress.toLowerCase(),
+          total_points: 0,
+          lifetime_points: 0,
+          level: 1
+        }])
+        .select()
+        .single();
+      
+      if (insertError) throw insertError;
+      return {
+        totalPoints: newData.total_points || 0,
+        lifetimePoints: newData.lifetime_points || 0,
+        level: newData.level || 1
+      };
+    }
+    
+    return {
+      totalPoints: data.total_points || 0,
+      lifetimePoints: data.lifetime_points || 0,
+      level: data.level || 1
+    };
+  } catch (error) {
+    console.error('Error getting user points:', error);
+    return { totalPoints: 0, lifetimePoints: 0, level: 1 };
+  }
+}
+
+/**
+ * Award points to a user (calls database function)
+ */
+export async function awardPoints(walletAddress, actionType, options = {}) {
+  if (!supabase) return 0;
+  
+  try {
+    const { data, error } = await supabase.rpc('award_points', {
+      p_wallet_address: walletAddress.toLowerCase(),
+      p_action_type: actionType,
+      p_description: options.description || null,
+      p_related_transaction_id: options.relatedTransactionId || null,
+      p_related_payment_link_id: options.relatedPaymentLinkId || null,
+      p_metadata: options.metadata || null
+    });
+    
+    if (error) throw error;
+    return data || 0;
+  } catch (error) {
+    console.error('Error awarding points:', error);
+    return 0;
+  }
+}
+
+/**
+ * Get points history for a user
+ */
+export async function getPointsHistory(walletAddress, limit = 50) {
+  if (!supabase) return [];
+  
+  try {
+    const { data, error } = await supabase
+      .from('point_transactions')
+      .select('*')
+      .eq('wallet_address', walletAddress.toLowerCase())
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting points history:', error);
+    return [];
+  }
+}
+
+/**
+ * Get points leaderboard
+ */
+export async function getPointsLeaderboard(limit = 100) {
+  if (!supabase) return [];
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_points')
+      .select('wallet_address, total_points, lifetime_points, level')
+      .order('lifetime_points', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting leaderboard:', error);
+    return [];
+  }
+}
+
+/**
+ * Get points configuration
+ */
+export async function getPointsConfig() {
+  if (!supabase) return [];
+  
+  try {
+    const { data, error } = await supabase
+      .from('points_config')
+      .select('*')
+      .eq('is_active', true)
+      .order('points_value', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting points config:', error);
+    return [];
+  }
+}
+
+// ============================================================================
+// PAYMENT ANALYTICS FUNCTIONS (Privacy-Preserving)
+// ============================================================================
+
+/**
+ * Get aggregated payment analytics for a user (privacy-preserving)
+ * Returns only aggregated data - no individual transaction details
+ */
+export async function getPaymentAnalytics(walletAddress) {
+  if (!supabase) return null;
+  
+  try {
+    const userWallet = walletAddress.toLowerCase();
+    
+    // Get all confirmed payments received by this user
+    const { data: receivedPayments, error: receivedError } = await supabase
+      .from('transactions')
+      .select('amount, created_at')
+      .ilike('recipient_address', userWallet)
+      .eq('status', 'confirmed')
+      .or('transaction_type.eq.payment,transaction_type.is.null')
+      .order('created_at', { ascending: true });
+    
+    if (receivedError) throw receivedError;
+    
+    const payments = receivedPayments || [];
+    
+    if (payments.length === 0) {
+      return {
+        totalReceived: 0,
+        totalPayments: 0,
+        averagePaymentSize: 0,
+        largestPayment: 0,
+        smallestPayment: 0,
+        paymentFrequency: {
+          daily: [],
+          weekly: [],
+          monthly: []
+        },
+        recentActivity: []
+      };
+    }
+    
+    // Calculate aggregates
+    const amounts = payments.map(p => parseFloat(p.amount || 0));
+    const totalReceived = amounts.reduce((sum, amt) => sum + amt, 0);
+    const totalPayments = payments.length;
+    const averagePaymentSize = totalReceived / totalPayments;
+    const largestPayment = Math.max(...amounts);
+    const smallestPayment = Math.min(...amounts);
+    
+    // Group by day (last 30 days)
+    const dailyData = {};
+    const weeklyData = {};
+    const monthlyData = {};
+    
+    payments.forEach(payment => {
+      const date = new Date(payment.created_at);
+      const dayKey = date.toISOString().split('T')[0];
+      const weekKey = getWeekKey(date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      
+      const amount = parseFloat(payment.amount || 0);
+      
+      // Daily aggregation
+      if (!dailyData[dayKey]) {
+        dailyData[dayKey] = { date: dayKey, count: 0, total: 0 };
+      }
+      dailyData[dayKey].count += 1;
+      dailyData[dayKey].total += amount;
+      
+      // Weekly aggregation
+      if (!weeklyData[weekKey]) {
+        weeklyData[weekKey] = { week: weekKey, count: 0, total: 0 };
+      }
+      weeklyData[weekKey].count += 1;
+      weeklyData[weekKey].total += amount;
+      
+      // Monthly aggregation
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { month: monthKey, count: 0, total: 0 };
+      }
+      monthlyData[monthKey].count += 1;
+      monthlyData[monthKey].total += amount;
+    });
+    
+    // Convert to arrays and sort
+    const dailyArray = Object.values(dailyData)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(-30); // Last 30 days
+    
+    const weeklyArray = Object.values(weeklyData)
+      .sort((a, b) => a.week.localeCompare(b.week))
+      .slice(-12); // Last 12 weeks
+    
+    const monthlyArray = Object.values(monthlyData)
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-12); // Last 12 months
+    
+    // Recent activity (last 7 days aggregated)
+    const recentDays = dailyArray.slice(-7);
+    
+    return {
+      totalReceived,
+      totalPayments,
+      averagePaymentSize,
+      largestPayment,
+      smallestPayment,
+      paymentFrequency: {
+        daily: dailyArray,
+        weekly: weeklyArray,
+        monthly: monthlyArray
+      },
+      recentActivity: recentDays
+    };
+  } catch (error) {
+    console.error('Error getting payment analytics:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper function to get week key (YYYY-WW format)
+ */
+function getWeekKey(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }
