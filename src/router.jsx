@@ -11,6 +11,7 @@ import TransactionsPage from "./pages/TransactionsPage.jsx";
 import MainBalancePage from "./pages/MainBalancePage.jsx";
 import PrivateBalancePage from "./pages/PrivateBalancePage.jsx";
 import SendPage from "./pages/SendPage.jsx";
+import PointsPage from "./pages/PointsPage.jsx";
 
 const EXCLUDED_SUBDOMAINS = [
   "www",
@@ -96,6 +97,10 @@ export const router = createBrowserRouter([
       {
         path: "/transfer",
         element: <TransferPage />,
+      },
+      {
+        path: "/points",
+        element: <PointsPage />,
       },
     ],
   },

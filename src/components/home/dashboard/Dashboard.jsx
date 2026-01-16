@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { cnm } from "../../../utils/style";
 import { Button, Skeleton, Spinner } from "@nextui-org/react";
 import QrCodeIcon from "../../../assets/icons/qr-code.svg?react";
@@ -13,12 +13,14 @@ import { getUserBalance, registerUser, updateUsername, getPaymentLinks } from ".
 import BalanceChart from "./BalanceChart.jsx";
 import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
 import { formatMNTAmount } from "../../../utils/mantle-utils.js";
+import { notifyPaymentReceived, requestNotificationPermission } from "../../../utils/pwa-utils.js";
 
 export default function Dashboard() {
   const [openQr, setOpenQr] = useState(false);
   const { account } = useAptos();
   const [balance, setBalance] = useState(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const previousBalanceRef = useRef(0);
 
   useEffect(() => {
     async function loadBalance() {
@@ -37,6 +39,21 @@ export default function Dashboard() {
         const balanceAmount = await getUserBalance(account);
         
         console.log('Dashboard balance loaded:', balanceAmount);
+        
+        // Check if balance increased (payment received)
+        if (previousBalanceRef.current > 0 && balanceAmount > previousBalanceRef.current) {
+          const receivedAmount = balanceAmount - previousBalanceRef.current;
+          // Request notification permission if not already granted
+          const hasPermission = await requestNotificationPermission();
+          if (hasPermission) {
+            notifyPaymentReceived(
+              formatMNTAmount(receivedAmount.toString(), false, 4),
+              null // We don't have sender address in this context
+            );
+          }
+        }
+        
+        previousBalanceRef.current = balanceAmount;
         setBalance(balanceAmount || 0);
         setIsLoadingBalance(false);
       }

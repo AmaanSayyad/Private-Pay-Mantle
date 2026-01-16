@@ -154,6 +154,8 @@ function StepOne({
       
       // Trigger a custom event to refresh the dashboard
       window.dispatchEvent(new Event('payment-links-updated'));
+      // Trigger points update
+      window.dispatchEvent(new Event('points-updated'));
       
       setStep("two");
     } catch (error) {

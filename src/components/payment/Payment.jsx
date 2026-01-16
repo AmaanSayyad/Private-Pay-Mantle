@@ -133,6 +133,8 @@ export default function Payment() {
 
       // Trigger balance update event
       window.dispatchEvent(new Event('balance-updated'));
+      // Trigger points update event
+      window.dispatchEvent(new Event('points-updated'));
 
       const shortHash = result.hash.slice(0, 6) + "..." + result.hash.slice(-4);
       

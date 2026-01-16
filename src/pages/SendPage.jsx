@@ -166,6 +166,9 @@ export default function SendPage() {
         transactionHash: result.hash,
         status: 'confirmed'
       });
+      
+      // Trigger points update
+      window.dispatchEvent(new Event('points-updated'));
 
       window.dispatchEvent(new Event('balance-updated'));
 
