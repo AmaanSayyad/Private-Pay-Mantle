@@ -84,6 +84,13 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - Push notifications for payment received events
 - Native app-like experience
 
+📲 **Mobile Wallet Support**
+- Full iOS MetaMask mobile app integration
+- Android MetaMask support
+- Seamless deep linking and auto-connect
+- Optimized mobile connection flow
+- Works in MetaMask's in-app browser
+
 🎯 **Points & Rewards System**
 - Earn points for various actions (payments, logins, etc.)
 - Leaderboard and rewards tracking
@@ -149,7 +156,8 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - **Frontend**: React + Vite
 - **Database**: Supabase (PostgreSQL)
 - **Cryptography**: @noble/secp256k1, @noble/hashes
-- **Wallet**: MetaMask (Mantle wallet)
+- **Wallet**: MetaMask (Desktop & Mobile iOS/Android support)
+- **Mobile SDK**: MetaMask SDK for seamless mobile wallet integration
 - **PWA**: Progressive Web App with offline support & push notifications
 - **State Management**: Zustand, Jotai
 - **UI Framework**: NextUI, Tailwind CSS
@@ -185,7 +193,8 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - ✅ Stealth address generation
 - ✅ Payment link system
 - ✅ Dashboard and monitoring
-- ✅ Mantle wallet integration
+- ✅ Mantle wallet integration (Desktop & Mobile)
+- ✅ iOS/Android MetaMask mobile app support
 - ✅ Progressive Web App (PWA) with offline support
 - ✅ Points & rewards system
 
@@ -657,6 +666,7 @@ npm run dev
 - **Supabase** - Database and backend infrastructure
 - **Vite PWA Plugin** - Progressive Web App capabilities
 - **Workbox** - Service worker and caching strategies
+- **MetaMask SDK** - Mobile wallet integration and deep linking
 ---
 
 This project demonstrates:
@@ -664,6 +674,7 @@ This project demonstrates:
 - ✅ **ZK & Privacy Innovation** - Advanced cryptographic privacy without compromising UX
 - ✅ **Mantle Network Integration** - Leveraging Mantle's low fees and high performance
 - ✅ **Production-Ready PWA** - Installable app with offline support and push notifications
+- ✅ **Mobile-First Design** - Full iOS/Android MetaMask support with seamless connection
 - ✅ **User-Friendly Design** - Simple UX comparable to Stripe, but with complete privacy
 
 ---
@@ -675,14 +686,16 @@ PrivatePay is a fully functional Progressive Web App that can be installed on mo
 ### Installation
 
 **Mobile (iOS):**
-1. Open PrivatePay in Safari
+1. Open PrivatePay in Safari or MetaMask mobile browser
 2. Tap Share → "Add to Home Screen"
-3. Enjoy native app experience
+3. Connect wallet using MetaMask mobile app
+4. Enjoy native app experience
 
 **Mobile (Android):**
-1. Open PrivatePay in Chrome
+1. Open PrivatePay in Chrome or MetaMask mobile browser
 2. Tap menu → "Add to Home Screen" or "Install App"
-3. Launch from home screen
+3. Connect wallet using MetaMask mobile app
+4. Launch from home screen
 
 **Desktop (Chrome/Edge):**
 1. Look for install icon in address bar
@@ -696,6 +709,21 @@ PrivatePay is a fully functional Progressive Web App that can be installed on mo
 - ✅ **Fast Loading** - Service worker caching for instant loads
 - ✅ **Native Experience** - Standalone display mode
 - ✅ **Auto-Updates** - Automatic service worker updates
+
+### Mobile Wallet Connection
+
+PrivatePay supports MetaMask on both desktop and mobile devices:
+
+**Desktop:**
+- Direct browser extension integration
+- Standard MetaMask connection flow
+
+**Mobile (iOS/Android):**
+- MetaMask SDK integration for seamless mobile experience
+- Deep linking to MetaMask mobile app
+- Auto-connect when returning from MetaMask
+- Works in MetaMask's in-app browser
+- Optimized connection flow for mobile devices
 
 > 📖 See [PWA_SETUP.md](./PWA_SETUP.md) for detailed PWA documentation
 
