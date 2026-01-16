@@ -8,6 +8,7 @@ import { useAptos } from "../../providers/MantleWalletProvider.jsx";
 export default function QrDialog({ open, setOpen, qrUrl }) {
   const { account } = useAptos();
   const [username, setUsername] = useState("");
+  const [paymentUrl, setPaymentUrl] = useState("");
   const qrRef = useRef(null);
 
   useEffect(() => {
@@ -17,7 +18,13 @@ export default function QrDialog({ open, setOpen, qrUrl }) {
     // user updates it on the dashboard).
     if (account && open) {
       const savedUsername = localStorage.getItem(`mantle_username_${account}`);
-      setUsername(savedUsername || account.slice(2, 8));
+      const currentUsername = savedUsername || account.slice(2, 8);
+      setUsername(currentUsername);
+      
+      // Generate full payment URL using current origin
+      const origin = window.location.origin;
+      const url = `${origin}/payment/${currentUsername}`;
+      setPaymentUrl(url);
     }
   }, [account, open]);
 
@@ -35,10 +42,10 @@ export default function QrDialog({ open, setOpen, qrUrl }) {
       if (navigator.share) {
         await navigator.share({
           title: "Payment Link",
-          text: `${username}.privatepay.me`,
+          text: paymentUrl,
         });
       } else {
-        onCopy(`${username}.privatepay.me`);
+        onCopy(paymentUrl);
       }
     } catch (error) {
       console.error("Error sharing:", error);
@@ -89,7 +96,7 @@ export default function QrDialog({ open, setOpen, qrUrl }) {
             <div className="w-full h-full bg-white p-5 rounded-[24px]">
               <QRCode
                 ref={qrRef}
-                value={`${username}.privatepay.me`}
+                value={paymentUrl}
                 qrStyle="dots"
                 logoImage="/assets/nouns.png"
                 logoWidth={30}
@@ -102,10 +109,10 @@ export default function QrDialog({ open, setOpen, qrUrl }) {
             </div>
 
             <div className="flex flex-row items-center gap-2.5 mt-3">
-              <h1 className="font-medium text-lg text-[#F4F4F4]">
-                {username}.privatepay.me
+              <h1 className="font-medium text-lg text-[#F4F4F4] break-all text-center">
+                {paymentUrl}
               </h1>
-              <button onClick={() => onCopy(`${username}.privatepay.me`)}>
+              <button onClick={() => onCopy(paymentUrl)}>
                 <Icons.copy className="text-primary-200" />
               </button>
             </div>
