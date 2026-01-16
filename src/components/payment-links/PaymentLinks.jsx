@@ -7,7 +7,7 @@ import {
 } from "../home/dashboard/PaymentLinksDashboard.jsx";
 import { Button, Spinner } from "@nextui-org/react";
 import { useAtom } from "jotai";
-import SquidLogo from "../../assets/squidl-logo.svg?react";
+import SquidLogo from "../../assets/squidl-only.svg?react";
 import { isCreateLinkDialogAtom } from "../../store/dialog-store.js";
 import { useState, useEffect } from "react";
 import { useAptos } from "../../providers/MantleWalletProvider.jsx";

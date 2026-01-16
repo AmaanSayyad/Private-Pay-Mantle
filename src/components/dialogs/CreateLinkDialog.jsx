@@ -14,7 +14,7 @@ import { validateAlphanumeric } from "../../utils/string.js";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { CARDS_SCHEME } from "../home/dashboard/PaymentLinksDashboard.jsx";
-import SquidLogo from "../../assets/squidl-logo.svg?react";
+import SquidLogo from "../../assets/squidl-only.svg?react";
 import { cnm } from "../../utils/style.js";
 import { createPaymentLink, getPaymentLinks, isAliasAvailable } from "../../lib/supabase.js";
 import { useAptos } from "../../providers/MantleWalletProvider.jsx";

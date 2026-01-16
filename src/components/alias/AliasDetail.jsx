@@ -21,7 +21,7 @@ import {
 } from "../home/dashboard/PaymentLinksDashboard.jsx";
 import { cnm } from "../../utils/style.js";
 import { shortenId } from "../../utils/formatting-utils.js";
-import SquidLogo from "../../assets/squidl-logo.svg?react";
+import SquidLogo from "../../assets/squidl-only.svg?react";
 import { shortenAddress } from "../../utils/string.js";
 import { useWeb3 } from "../../providers/Web3Provider.jsx";
 import { squidlAPI } from "../../api/squidl.js";

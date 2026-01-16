@@ -5,7 +5,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { isBackAtom } from "../../../store/payment-card-store.js";
 import { Button, Skeleton } from "@nextui-org/react";
 import { isCreateLinkDialogAtom } from "../../../store/dialog-store.js";
-import SquidLogo from "../../../assets/squidl-logo.svg?react";
+import SquidLogo from "../../../assets/squidl-only.svg?react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getPaymentLinks, getPaymentTotalsByAlias } from "../../../lib/supabase.js";
