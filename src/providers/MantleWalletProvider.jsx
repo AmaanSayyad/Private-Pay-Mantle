@@ -162,7 +162,8 @@ export default function MantleWalletProvider({ children }) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    if (typeof window.ethereum === 'undefined') {
+    // Check if window.ethereum exists and is available
+    if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
       console.warn('MetaMask provider not available');
       return;
     }
@@ -225,7 +226,7 @@ export default function MantleWalletProvider({ children }) {
     }
 
     // Check for desktop MetaMask or SDK-injected provider
-    if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
+    if (typeof window !== 'undefined' && window.ethereum && typeof window.ethereum.request === 'function') {
       setIsConnecting(true);
       try {
         const accounts = await window.ethereum.request({
@@ -234,6 +235,10 @@ export default function MantleWalletProvider({ children }) {
 
         if (accounts.length === 0) {
           throw new Error('No accounts found');
+        }
+
+        if (!window.ethereum) {
+          throw new Error('MetaMask provider not available');
         }
 
         const ethProvider = new ethers.BrowserProvider(window.ethereum);
@@ -307,7 +312,7 @@ export default function MantleWalletProvider({ children }) {
             // Wait a bit more for SDK to initialize
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            if (window.ethereum) {
+            if (window.ethereum && typeof window.ethereum.request === 'function') {
               // SDK injected provider, retry connection
               setIsConnecting(true);
               try {
@@ -317,6 +322,10 @@ export default function MantleWalletProvider({ children }) {
 
                 if (accounts.length === 0) {
                   throw new Error('No accounts found');
+                }
+
+                if (!window.ethereum) {
+                  throw new Error('MetaMask provider not available');
                 }
 
                 const ethProvider = new ethers.BrowserProvider(window.ethereum);
@@ -380,13 +389,17 @@ export default function MantleWalletProvider({ children }) {
   }, []);
 
   const switchNetwork = useCallback(async () => {
-    if (!isMetaMaskInstalled()) {
+    if (typeof window === 'undefined' || !window.ethereum) {
       toast.error('MetaMask is not installed');
       return;
     }
 
     try {
       await switchToMantleNetwork();
+      
+      if (!window.ethereum) {
+        throw new Error('MetaMask provider not available');
+      }
       
       const ethProvider = new ethers.BrowserProvider(window.ethereum);
       const network = await ethProvider.getNetwork();
@@ -404,7 +417,10 @@ export default function MantleWalletProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!isMetaMaskInstalled()) return;
+    // Check if window.ethereum exists before setting up listeners
+    if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
+      return;
+    }
 
     const handleAccountsChanged = (accounts) => {
       if (accounts.length === 0) {
@@ -427,13 +443,24 @@ export default function MantleWalletProvider({ children }) {
       }
     };
 
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', handleChainChanged);
+    // Only set up listeners if window.ethereum exists and has the 'on' method
+    if (window.ethereum && typeof window.ethereum.on === 'function') {
+      try {
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+        window.ethereum.on('chainChanged', handleChainChanged);
+      } catch (error) {
+        console.warn('Failed to set up ethereum event listeners:', error);
+      }
+    }
 
     return () => {
-      if (window.ethereum.removeListener) {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
+      if (window.ethereum && typeof window.ethereum.removeListener === 'function') {
+        try {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        } catch (error) {
+          console.warn('Failed to remove ethereum event listeners:', error);
+        }
       }
     };
   }, [account, provider, disconnect]);
