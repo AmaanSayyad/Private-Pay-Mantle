@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
+import { initializePWA } from "./utils/pwa-utils.js";
 
 // Global error handler for uncaught promise rejections
 window.addEventListener('unhandledrejection', (event) => {
@@ -85,6 +86,9 @@ try {
 } catch (error) {
   console.error('[Init] Error cleaning localStorage:', error);
 }
+
+// Initialize PWA
+initializePWA().catch(console.error);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
