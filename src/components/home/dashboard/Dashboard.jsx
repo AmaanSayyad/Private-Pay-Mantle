@@ -14,6 +14,7 @@ import BalanceChart from "./BalanceChart.jsx";
 import { useAptos } from "../../../providers/MantleWalletProvider.jsx";
 import { formatMNTAmount } from "../../../utils/mantle-utils.js";
 import { notifyPaymentReceived, requestNotificationPermission } from "../../../utils/pwa-utils.js";
+import MobileSupportAlert from "../../shared/MobileSupportAlert.jsx";
 
 export default function Dashboard() {
   const [openQr, setOpenQr] = useState(false);
@@ -75,6 +76,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <MobileSupportAlert />
       <QrDialog open={openQr} setOpen={setOpenQr} />
 
       <motion.div
