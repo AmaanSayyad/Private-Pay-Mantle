@@ -1,0 +1,51 @@
+{
+  "name": "PrivatePay - Private Payments on Mantle",
+  "short_name": "PrivatePay",
+  "description": "Privacy-preserving payment platform on Mantle Network with stealth addresses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d08e3",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/squidl-only.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/squidl-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Send Payment",
+      "short_name": "Send",
+      "description": "Send a private payment",
+      "url": "/send",
+      "icons": [{ "src": "/assets/squidl-only.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Payment Links",
+      "short_name": "Links",
+      "description": "View your payment links",
+      "url": "/payment-links",
+      "icons": [{ "src": "/assets/squidl-only.svg", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
