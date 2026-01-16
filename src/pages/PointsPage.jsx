@@ -55,12 +55,12 @@ export default function PointsPage() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full max-w-4xl mx-auto px-4 pt-24 pb-24">
+      <div className="flex items-center justify-between mb-6 sticky top-20 z-40 bg-white/95 backdrop-blur-sm py-4 -mx-4 px-4 rounded-lg">
         <h1 className="text-3xl font-bold text-gray-900">Points & Rewards</h1>
         <Button
           onClick={() => navigate("/")}
-          className="bg-primary text-white"
+          className="bg-primary text-white relative z-50 pointer-events-auto"
         >
           Back to Dashboard
         </Button>
