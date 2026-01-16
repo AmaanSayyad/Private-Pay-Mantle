@@ -78,6 +78,17 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - Receiver cannot identify sender
 - Observers see nothing linkable
 
+📱 **Progressive Web App (PWA)**
+- Install on mobile and desktop devices
+- Offline functionality with service worker caching
+- Push notifications for payment received events
+- Native app-like experience
+
+🎯 **Points & Rewards System**
+- Earn points for various actions (payments, logins, etc.)
+- Leaderboard and rewards tracking
+- Level-based progression system
+
 ---
 
 ## 🚀 How It Works
@@ -139,6 +150,10 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - **Database**: Supabase (PostgreSQL)
 - **Cryptography**: @noble/secp256k1, @noble/hashes
 - **Wallet**: MetaMask (Mantle wallet)
+- **PWA**: Progressive Web App with offline support & push notifications
+- **State Management**: Zustand, Jotai
+- **UI Framework**: NextUI, Tailwind CSS
+- **Charts**: Recharts
 
 ---
 
@@ -171,6 +186,8 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 - ✅ Payment link system
 - ✅ Dashboard and monitoring
 - ✅ Mantle wallet integration
+- ✅ Progressive Web App (PWA) with offline support
+- ✅ Points & rewards system
 
 ### Phase 2: Enhanced Privacy 🚧
 - 🚧 Zero-knowledge proofs (Plonky2)
@@ -611,6 +628,7 @@ npm run dev
 
 6. **Access the app**
    - Application: http://localhost:5173
+   - PWA features: Install the app from your browser for native experience
 
 > 📚 **Need help?** Check out [QUICK_START.md](./QUICK_START.md) for step-by-step setup instructions.
 
@@ -622,6 +640,9 @@ npm run dev
 - **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Complete deployment checklist
 - **[QUICK_START.md](./QUICK_START.md)** - Quick start guide
 - **[MIGRATION_STATUS.md](./MIGRATION_STATUS.md)** - Database migration status
+- **[PWA_SETUP.md](./PWA_SETUP.md)** - Progressive Web App setup and features
+- **[POINTS_SYSTEM.md](./POINTS_SYSTEM.md)** - Points and rewards system documentation
+- **[STEALTH_ADDRESS_ARCHITECTURE.md](./STEALTH_ADDRESS_ARCHITECTURE.md)** - Detailed stealth address architecture
 
 ---
 
@@ -634,6 +655,50 @@ npm run dev
 - **BIP 0352 / EIP 5564** - Stealth address standards
 - **@noble** libraries - Cryptographic primitives
 - **Supabase** - Database and backend infrastructure
+- **Vite PWA Plugin** - Progressive Web App capabilities
+- **Workbox** - Service worker and caching strategies
+---
+
+This project demonstrates:
+- ✅ **Privacy-Preserving Payments** - Complete unlinkability using stealth addresses
+- ✅ **ZK & Privacy Innovation** - Advanced cryptographic privacy without compromising UX
+- ✅ **Mantle Network Integration** - Leveraging Mantle's low fees and high performance
+- ✅ **Production-Ready PWA** - Installable app with offline support and push notifications
+- ✅ **User-Friendly Design** - Simple UX comparable to Stripe, but with complete privacy
+
+---
+
+## 📱 Progressive Web App (PWA)
+
+PrivatePay is a fully functional Progressive Web App that can be installed on mobile and desktop devices.
+
+### Installation
+
+**Mobile (iOS):**
+1. Open PrivatePay in Safari
+2. Tap Share → "Add to Home Screen"
+3. Enjoy native app experience
+
+**Mobile (Android):**
+1. Open PrivatePay in Chrome
+2. Tap menu → "Add to Home Screen" or "Install App"
+3. Launch from home screen
+
+**Desktop (Chrome/Edge):**
+1. Look for install icon in address bar
+2. Click "Install" when prompted
+3. App opens in standalone window
+
+### PWA Features
+
+- ✅ **Offline Support** - Cached assets work offline
+- ✅ **Push Notifications** - Get notified when payments are received
+- ✅ **Fast Loading** - Service worker caching for instant loads
+- ✅ **Native Experience** - Standalone display mode
+- ✅ **Auto-Updates** - Automatic service worker updates
+
+> 📖 See [PWA_SETUP.md](./PWA_SETUP.md) for detailed PWA documentation
+
 ---
 
 ## 🔗 Links & Resources
