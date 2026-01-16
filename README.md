@@ -686,10 +686,9 @@ PrivatePay is a fully functional Progressive Web App that can be installed on mo
 ### Installation
 
 **Mobile (iOS):**
-1. Open PrivatePay in Safari or MetaMask mobile browser
+1. Open PrivatePay in Safari
 2. Tap Share → "Add to Home Screen"
-3. Connect wallet using MetaMask mobile app
-4. Enjoy native app experience
+3. Enjoy native app experience
 
 **Mobile (Android):**
 1. Open PrivatePay in Chrome or MetaMask mobile browser
