@@ -4,6 +4,10 @@
 -- This file applies all migrations in the correct order for Mantle Network
 -- Run this file in Supabase SQL Editor to set up the complete database schema
 -- ============================================================================
+-- 
+-- NOTE: Points system migration (20250116000000_add_points_system.sql) should
+-- be run separately after this file, or include it at the end of this file.
+-- ============================================================================
 
 -- Migration 1: Core Schema (20241230_mantle_schema.sql)
 -- ============================================================================
