@@ -76,7 +76,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <MobileSupportAlert />
       <QrDialog open={openQr} setOpen={setOpenQr} />
 
       <motion.div
@@ -85,6 +84,7 @@ export default function Dashboard() {
       >
         <div className="flex flex-col items-center py-20 w-full">
           <div className="w-full max-w-lg flex flex-col items-center gap-4 pt-12 pb-20">
+            <MobileSupportAlert />
             <ReceiveCard setOpenQr={setOpenQr} />
             <MergedBalanceCard balance={balance} isLoading={isLoadingBalance} />
             <PaymentLinksDashboard />
