@@ -4,6 +4,7 @@ import { MANTLE_CONFIG, addMantleNetworkToMetaMask, switchToMantleNetwork } from
 import { mantleBlockchainService } from '../lib/mantle/mantleBlockchainService.js';
 import { registerUser } from '../lib/supabase.js';
 import toast from 'react-hot-toast';
+import MetaMaskSDK from '@metamask/sdk';
 
 /**
  * @typedef {Object} MantleWalletContextType
@@ -49,14 +50,68 @@ export default function MantleWalletProvider({ children }) {
   const [signer, setSigner] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+  const [metaMaskSDK, setMetaMaskSDK] = useState(null);
+
+  // Initialize MetaMask SDK for mobile support
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isMobile = isIOS || isAndroid;
+
+    // Only initialize SDK on mobile devices
+    if (isMobile && !window.ethereum) {
+      try {
+        const sdk = new MetaMaskSDK({
+          dappMetadata: {
+            name: 'PrivatePay',
+            url: window.location.origin,
+          },
+          injectProvider: true,
+          checkInstallation: true,
+        });
+        setMetaMaskSDK(sdk);
+      } catch (error) {
+        console.error('Failed to initialize MetaMask SDK:', error);
+      }
+    }
+  }, []);
 
   const isMetaMaskInstalled = () => {
-    return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
+    if (typeof window === 'undefined') return false;
+    
+    // Check for desktop MetaMask or SDK-injected provider
+    if (typeof window.ethereum !== 'undefined') {
+      return true;
+    }
+    
+    // On mobile, MetaMask SDK will inject the provider
+    // or we can try to connect via deep link
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    if (isIOS || isAndroid) {
+      // MetaMask mobile is available via SDK or deep link
+      return true;
+    }
+    
+    return false;
   };
 
   const initializeProvider = useCallback(async () => {
-    if (!isMetaMaskInstalled()) {
-      console.warn('MetaMask is not installed');
+    // Wait for SDK to inject provider on mobile
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isMobile = isIOS || isAndroid;
+    
+    if (isMobile && !window.ethereum && metaMaskSDK) {
+      // Give SDK time to initialize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    if (typeof window.ethereum === 'undefined') {
+      console.warn('MetaMask provider not available');
       return;
     }
 
@@ -100,84 +155,163 @@ export default function MantleWalletProvider({ children }) {
     } catch (error) {
       console.error('Failed to initialize provider:', error);
     }
-  }, []);
+  }, [metaMaskSDK]);
 
   const connect = useCallback(async () => {
-    if (!isMetaMaskInstalled()) {
-      toast.error('Please install MetaMask to connect your wallet');
-      window.open('https://metamask.io/download/', '_blank');
-      return;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isMobile = isIOS || isAndroid;
+    
+    // Wait a bit for SDK to inject provider on mobile
+    if (isMobile && !window.ethereum && metaMaskSDK) {
+      // Give SDK time to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    setIsConnecting(true);
-    try {
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-
-      if (accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
-
-      const ethProvider = new ethers.BrowserProvider(window.ethereum);
-      setProvider(ethProvider);
-
-      const account = accounts[0];
-      setAccount(account);
-      setIsConnected(true);
-
-      const signer = await ethProvider.getSigner();
-      setSigner(signer);
-
-      // Register user in Supabase (creates default payment link)
+    // Check for desktop MetaMask or SDK-injected provider
+    if (typeof window.ethereum !== 'undefined') {
+      setIsConnecting(true);
       try {
-        const user = await registerUser(account);
-        if (user) {
-          console.log('User registered/retrieved:', user);
-          // Save username to localStorage
-          const username = user.username || account.slice(2, 8).toLowerCase();
-          localStorage.setItem(`mantle_username_${account}`, username);
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts',
+        });
+
+        if (accounts.length === 0) {
+          throw new Error('No accounts found');
         }
-      } catch (regError) {
-        console.warn('Could not register user:', regError);
-      }
 
-      try {
-        await mantleBlockchainService.initialize();
-        mantleBlockchainService.signer = signer;
-        console.log('Mantle blockchain service signer set successfully');
-      } catch (error) {
-        console.error('Failed to set Mantle blockchain service signer:', error);
-      }
+        const ethProvider = new ethers.BrowserProvider(window.ethereum);
+        setProvider(ethProvider);
 
-      const network = await ethProvider.getNetwork();
-      const currentChainId = Number(network.chainId);
-      setChainId(currentChainId);
-      
-      if (currentChainId !== MANTLE_CONFIG.chainId) {
-        setIsCorrectNetwork(false);
-        toast.error(`Please switch to ${MANTLE_CONFIG.chainName} network`);
-        
+        const account = accounts[0];
+        setAccount(account);
+        setIsConnected(true);
+
+        const signer = await ethProvider.getSigner();
+        setSigner(signer);
+
+        // Register user in Supabase (creates default payment link)
         try {
-          await switchToMantleNetwork();
+          const user = await registerUser(account);
+          if (user) {
+            console.log('User registered/retrieved:', user);
+            // Save username to localStorage
+            const username = user.username || account.slice(2, 8).toLowerCase();
+            localStorage.setItem(`mantle_username_${account}`, username);
+          }
+        } catch (regError) {
+          console.warn('Could not register user:', regError);
+        }
+
+        try {
+          await mantleBlockchainService.initialize();
+          mantleBlockchainService.signer = signer;
+          console.log('Mantle blockchain service signer set successfully');
+        } catch (error) {
+          console.error('Failed to set Mantle blockchain service signer:', error);
+        }
+
+        const network = await ethProvider.getNetwork();
+        const currentChainId = Number(network.chainId);
+        setChainId(currentChainId);
+        
+        if (currentChainId !== MANTLE_CONFIG.chainId) {
+          setIsCorrectNetwork(false);
+          toast.error(`Please switch to ${MANTLE_CONFIG.chainName} network`);
+          
+          try {
+            await switchToMantleNetwork();
+            setIsCorrectNetwork(true);
+            toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
+          } catch (switchError) {
+            console.error('Failed to switch network:', switchError);
+          }
+        } else {
           setIsCorrectNetwork(true);
           toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
-        } catch (switchError) {
-          console.error('Failed to switch network:', switchError);
         }
-      } else {
-        setIsCorrectNetwork(true);
-        toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
-      }
 
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      toast.error('Failed to connect wallet');
-      setIsConnecting(false);
-    } finally {
-      setIsConnecting(false);
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
+        if (error.code === 4001) {
+          toast.error('Connection rejected by user');
+        } else {
+          toast.error('Failed to connect wallet');
+        }
+        setIsConnecting(false);
+      } finally {
+        setIsConnecting(false);
+      }
+    } else {
+      // MetaMask not detected - show appropriate message
+      if (isMobile) {
+        // On mobile, try to use MetaMask SDK or deep link
+        if (metaMaskSDK) {
+          try {
+            // Wait a bit more for SDK to initialize
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (window.ethereum) {
+              // SDK injected provider, retry connection
+              setIsConnecting(true);
+              try {
+                const accounts = await window.ethereum.request({
+                  method: 'eth_requestAccounts',
+                });
+
+                if (accounts.length === 0) {
+                  throw new Error('No accounts found');
+                }
+
+                const ethProvider = new ethers.BrowserProvider(window.ethereum);
+                setProvider(ethProvider);
+
+                const account = accounts[0];
+                setAccount(account);
+                setIsConnected(true);
+
+                const signer = await ethProvider.getSigner();
+                setSigner(signer);
+
+                // Register user
+                try {
+                  const user = await registerUser(account);
+                  if (user) {
+                    const username = user.username || account.slice(2, 8).toLowerCase();
+                    localStorage.setItem(`mantle_username_${account}`, username);
+                  }
+                } catch (regError) {
+                  console.warn('Could not register user:', regError);
+                }
+
+                const network = await ethProvider.getNetwork();
+                const currentChainId = Number(network.chainId);
+                setChainId(currentChainId);
+                setIsCorrectNetwork(currentChainId === MANTLE_CONFIG.chainId);
+                
+                toast.success(`Connected to ${MANTLE_CONFIG.chainName}`);
+                setIsConnecting(false);
+                return;
+              } catch (error) {
+                console.error('Failed to connect via SDK:', error);
+                setIsConnecting(false);
+              }
+            }
+          } catch (error) {
+            console.error('SDK connection failed:', error);
+          }
+        }
+        
+        // If still no provider, use deep link to open in MetaMask app
+        toast.info('Opening in MetaMask app...');
+        const deepLink = `https://metamask.app.link/dapp/${encodeURIComponent(window.location.href)}`;
+        window.location.href = deepLink;
+      } else {
+        toast.error('Please install MetaMask to connect your wallet');
+        window.open('https://metamask.io/download/', '_blank');
+      }
     }
-  }, []);
+  }, [metaMaskSDK]);
 
   const disconnect = useCallback(async () => {
     setAccount(null);
