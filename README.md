@@ -41,6 +41,7 @@ Powered by ECDH + secp256k1 + BIP 0352/EIP 5564 + ROFL DarkPool Mixer
 ---
 
 ## ✅ The Solution: PrivatePay
+<img width="1274" height="579" alt="Screenshot 2026-01-16 at 3 46 04 PM" src="https://github.com/user-attachments/assets/d2559113-7e59-4cda-a323-f4355db04042" />
 
 **Where every transaction is fully private, anonymous, unidentifiable, and untrackable.**
 
