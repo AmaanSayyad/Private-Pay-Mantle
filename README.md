@@ -730,7 +730,7 @@ PrivatePay supports MetaMask on both desktop and mobile devices:
 
 ## 🔗 Links & Resources
 - **Pitch Deck:** https://docs.google.com/presentation/d/1CZx4tTtaLhS0rbD4v0tlDC7OkFB0GPcWqbD43B9dXX0/edit?usp=sharing
-- **Demo Video:** 
+- **Demo Video:** https://youtu.be/8Jwvu0nj2yA
 - **Pitch Video:** https://youtu.be/p5Pgx0ZBUqA
 - **Live Website:** https://private-pay-mantle-three.vercel.app/
 - **Github:** https://github.com/AmaanSayyad/Private-Pay-Mantle
